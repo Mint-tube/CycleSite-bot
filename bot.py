@@ -27,7 +27,7 @@ async def sync(intrct):
     if intrct.user.id in config.bot_engineers:
         await tree.sync(guild=discord.Object(id=guild))
         embed = discord.Embed(title="Комманды синхронизированы!", color=config.colors.success)
-        await intrc.response.send_message(embed=embed)
+        await intrct.response.send_message(embed=embed)
     else:
         embed = discord.Embed(title="Эта комманда не для тебя", color=config.colors.danger)
         await intrct.response.send_message(embed=embed)
@@ -37,14 +37,6 @@ async def sync(intrct):
 async def on_ping(intrct):
     embed = discord.Embed(title="Понг!    ", description=f"{round(client.latency * 1000)}мс", color=config.colors.info)
     await intrct.response.send_message(embed=embed)
-
-#Очистка сообщенией
-@tree.command(name="очистить", description="Удаляет {amount} сообщений", guild=discord.Object(id=guild))
-async def purge(intrct, amount: int):
-    deleted = await intrct.channel.purge(limit=amount)
-    embed = discord.Embed(title='Очищенно успешно!', description=f'Удалено {len(deleted)} в #{intrct.channel}', color=config.colors.success)
-    await intrct.response.send_message(embed=embed, delete_after=4.0)
-
 
 #Cлучайные реакции на сообщения
 @client.event
