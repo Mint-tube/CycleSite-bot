@@ -33,7 +33,8 @@ class ticket_launcher(discord.ui.View):
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
             interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True, attach_files=True),
-            interaction.guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+            interaction.guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
+            interaction.guild.get_role(config.admin_role): discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
         }
         channel = await interaction.guild.create_text_channel(f"Тикет-для-{interaction.user.name}", overwrites=overwrites, category=interaction.channel.category)
         embed = discord.Embed(title="Тикет открыт!", color=config.colors.info)
@@ -102,12 +103,14 @@ async def ticketing(intrct):
 
 @tree.command(name="добавить", description="Добавляет пользователя в тикет", guild=discord.Object(id=guild))
 @app_commands.describe(user="Пользователь для добавления в тикет")
-@discord.app_commands.checks.has_role(config.admin_role)
 async def add_user(intrct, user: discord.User):
     if "тикет-для-" in intrct.channel.name:
-        await intrct.channel.set_permissions(user, read_messages=True, send_messages=True, attach_files=True)
-        embed = discord.Embed(title=f"Пользователь добавлен", description=f"{user.mention} был добавлен в тикет {intrct.user.mention}", color=config.colors.info)
-        await intrct.response.send_message(embed=embed, ephemeral=False)
+        if intrct.user.roles and intrct.guild.get_role(config.admin_role) in intrct.user.roles:
+            await intrct.channel.set_permissions(user, read_messages=True, send_messages=True, attach_files=True)
+            embed = discord.Embed(title=f"Пользователь добавлен", description=f"{user.mention} был добавлен в тикет {intrct.user.mention}", color=config.colors.info)
+            await intrct.response.send_message(embed=embed, ephemeral=False)
+        else:
+            await intrct.response.send_message("Вы не можете добавить пользователей в тикет", ephemeral=True)
     else:
         await intrct.response.send_message("Это не тикет!", ephemeral=True)
 
