@@ -23,6 +23,11 @@ tree = app_commands.CommandTree(client)
 # conn.commit()
 # conn.close()
 
+#Добавление автора к embed
+def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
+    embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar)
+    return embed
+
 class ticket_launcher(discord.ui.View):
 
     def __init__(self) -> None:
@@ -37,9 +42,10 @@ class ticket_launcher(discord.ui.View):
             interaction.guild.get_role(config.admin_role): discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
         }
         channel = await interaction.guild.create_text_channel(f"Тикет-для-{interaction.user.name}", overwrites=overwrites, category=interaction.channel.category)
-        embed = discord.Embed(title="Тикет открыт!", color=config.colors.info)
-        embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar)
+        embed = discord.Embed(title=f"Тикет открыт!", color=config.colors.info)
+        embed = interaction_author(embed, interaction)
         await channel.send(embed=embed, view = ticket_operator())
+        await channel.send(interaction.guild.get_role(config.admin_role).mention)
         embed = discord.Embed(title="Тикет открыт", description=f"В канале {channel.mention}", color=config.colors.info)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
