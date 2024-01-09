@@ -16,17 +16,17 @@ intents.members = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-#Подключение к базе данных
-# conn = sqlite3.connect("CycleSite.db")
-# cursor = conn.cursor()
-# cursor.close()
-# conn.commit()
-# conn.close()
-
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
     embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar)
     return embed
+
+def tickets_counter():
+    with open('data/tickets_counter.txt', 'r') as file:
+        var = int(file.readline())
+    with open('data/tickets_counter.txt', 'w+') as file:
+        file.write(str(var + 1))
+    return var
 
 class ticket_launcher(discord.ui.View):
 
@@ -35,18 +35,12 @@ class ticket_launcher(discord.ui.View):
     
     @discord.ui.button(label="Открыть тикет", style=discord.ButtonStyle.green, custom_id="open_ticket")
     async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        overwrites = {
-            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True, attach_files=True),
-            interaction.guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
-            interaction.guild.get_role(config.admin_role): discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
-        }
-        channel = await interaction.guild.create_text_channel(f"Тикет-для-{interaction.user.name}", overwrites=overwrites, category=interaction.channel.category)
+        thread = await interaction.channel.create_thread(name=f"тикет-номер-{tickets_counter()}", auto_archive_duration=10080)
         embed = discord.Embed(title=f"Тикет открыт!", color=config.colors.info)
         embed = interaction_author(embed, interaction)
-        await channel.send(embed=embed, view = ticket_operator())
-        await channel.send(interaction.guild.get_role(config.admin_role).mention)
-        embed = discord.Embed(title="Тикет открыт", description=f"В канале {channel.mention}", color=config.colors.info)
+        await thread.send(embed=embed, view = ticket_operator())
+        await thread.send(interaction.guild.get_role(config.admin_role).mention + ' ' + interaction.user.mention)
+        embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 class ticket_operator(discord.ui.View):
@@ -64,7 +58,7 @@ class confirm_deletion(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=config.auto_cancel_time)
 
-    @discord.ui.button(label="Удалить", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="Закрыть", style=discord.ButtonStyle.red)
     async def delete(self, interaction, button):
         await interaction.channel.delete()
         
@@ -101,23 +95,10 @@ async def on_message(message):
         await message.add_reaction(choice(message.guild.emojis))
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=guild))
-async def ticketing(intrct):
+async def ticketing(intrct, ):
     embed = discord.Embed(title="PLACEHOLDER", description="PLACEHOLDER", color=config.colors.info)
     client.add_view(ticket_launcher())
     await intrct.channel.send(embed=embed, view=ticket_launcher())
     await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
-
-@tree.command(name="добавить", description="Добавляет пользователя в тикет", guild=discord.Object(id=guild))
-@app_commands.describe(user="Пользователь для добавления в тикет")
-async def add_user(intrct, user: discord.User):
-    if "тикет-для-" in intrct.channel.name:
-        if intrct.user.roles and intrct.guild.get_role(config.admin_role) in intrct.user.roles:
-            await intrct.channel.set_permissions(user, read_messages=True, send_messages=True, attach_files=True)
-            embed = discord.Embed(title=f"Пользователь добавлен", description=f"{user.mention} был добавлен в тикет {intrct.user.mention}", color=config.colors.info)
-            await intrct.response.send_message(embed=embed, ephemeral=False)
-        else:
-            await intrct.response.send_message("Вы не можете добавить пользователей в тикет", ephemeral=True)
-    else:
-        await intrct.response.send_message("Это не тикет!", ephemeral=True)
 
 client.run(token)

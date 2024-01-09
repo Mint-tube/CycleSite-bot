@@ -1,11 +1,10 @@
 # CycleSite-bot
 
-### Before starting:
+### Перед началом работы:
 
-* Create `.env`
-* Write 2 key-value pairs:
-
-  1. TOKEN={AUTH-TOKEN}
-  2. GUILD={GUILD-ID}
-* TOKEN is your bot's authtorization token from [Discord Developer Portal](https://discord.com/developers/applications)
-* GUILD is a server where your bot will work.
+* Создайте файл `.env`
+* Запишите в него 2 пары ключ-значение:
+  1. TOKEN=...     - Токен бота, полученый на [Discord Developer Portal](https://discord.com/developers/applications) (гайда на создание бота не будет)
+  2. GUILD=...      - Единственный сервер, на котором будет работать бот. Многосерверность не предусмотрена.
+* Измените config.py под свой сервер
+* Обнулите переменную в файле `data/tickets_counter.txt`
