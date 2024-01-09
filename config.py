@@ -1,3 +1,6 @@
+token = 'MTE4ODAyNDA1Nzg3OTMzNDk3NA.GnOFjw.a56IrzEUjsRxOIRCVMndz2ntIZIfycmq4eD1q4' #Токен бота 
+guild = '1188020803523051581' #ID Сервера на котором работает бот
+
 bot_engineers = [554281270260006914, 949708119334854658] #ID Управляющих ботом
 admin_role = 1188023192510545992 #ID Роли Администратора
 

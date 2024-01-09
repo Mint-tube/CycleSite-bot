@@ -1,14 +1,10 @@
 import os, discord, config, asyncio, sqlite3, sys
 from discord import app_commands, Color
 from discord.ext import commands
-from dotenv import load_dotenv, dotenv_values
 from icecream import ic
 from random import randint, choice
 
-#Загрузка переменных окружения из файла .env
-load_dotenv()
-token = os.getenv('TOKEN')
-guild = os.getenv('GUILD')
+guild = config.guild
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,21 +17,27 @@ def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
     embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar)
     return embed
 
-def tickets_counter():
+#Взаимодействие с tickets_counter.txt
+def tickets_counter_add():
     with open('data/tickets_counter.txt', 'r') as file:
         var = int(file.readline())
     with open('data/tickets_counter.txt', 'w+') as file:
         file.write(str(var + 1))
     return var
 
-class ticket_launcher(discord.ui.View):
+# def tickets_counter_read():           ----- На всякий случай, потом вырежу -----
+    # with open('data/tickets_counter.txt', 'r') as file:
+    #     var = int(file.readline())
+    # return var
 
+
+class ticket_launcher(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None) 
     
     @discord.ui.button(label="Открыть тикет", style=discord.ButtonStyle.green, custom_id="open_ticket")
     async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        thread = await interaction.channel.create_thread(name=f"тикет-номер-{tickets_counter()}", auto_archive_duration=10080)
+        thread = await interaction.channel.create_thread(name=f"тикет-номер-{tickets_counter_add()}", auto_archive_duration=10080)
         embed = discord.Embed(title=f"Тикет открыт!", color=config.colors.info)
         embed = interaction_author(embed, interaction)
         await thread.send(embed=embed, view = ticket_operator())
@@ -44,23 +46,27 @@ class ticket_launcher(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 class ticket_operator(discord.ui.View):
-
     def __init__(self) -> None:
         super().__init__(timeout=None)
 
     @discord.ui.button(label="Закрыть тикет", style=discord.ButtonStyle.red, custom_id="close_ticket")
     async def close(self, interaction, button):
         embed = discord.Embed(title="Вы уверены что хотите закрыть тикет?", description=f"Удаление автоматически отменится через {config.auto_cancel_time} секунд", color=config.colors.info)
-        await interaction.response.send_message(embed = embed, view = confirm_deletion(), ephemeral = True, delete_after = config.auto_cancel_time)
+        await interaction.response.send_message(embed = embed, view = confirm_closing(), ephemeral = True, delete_after = config.auto_cancel_time)
 
-class confirm_deletion(discord.ui.View):
+class confirm_closing(discord.ui.View):
 
     def __init__(self) -> None:
         super().__init__(timeout=config.auto_cancel_time)
 
     @discord.ui.button(label="Закрыть", style=discord.ButtonStyle.red)
-    async def delete(self, interaction, button):
-        await interaction.channel.delete()
+    async def close(self, interaction, button):
+        embed = discord.Embed(title=f"Тикет номер {interaction.channel.name[-1]} закрыт!", color=config.colors.info)
+
+        #БРО ДОДЕЛАЙ ЭТОТ EMBED
+        await interaction.user.send(embed=embed)
+        await interaction.response.send_message(embed=embed)
+        await interaction.channel.edit(archived = True, locked = True)
         
 
 @client.event
@@ -91,14 +97,17 @@ async def on_ping(intrct):
 async def on_message(message):
     if message.author == client.user:
         return
-    if randint(0, 5) == 1:
+    if randint(0, 10) == 1:
         await message.add_reaction(choice(message.guild.emojis))
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=guild))
-async def ticketing(intrct, ):
-    embed = discord.Embed(title="PLACEHOLDER", description="PLACEHOLDER", color=config.colors.info)
-    client.add_view(ticket_launcher())
-    await intrct.channel.send(embed=embed, view=ticket_launcher())
-    await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
+async def ticketing(intrct, title: str, description: str):
+    if intrct.guild.get_role(config.admin_role) in intrct.user.roles:
+        embed = discord.Embed(title=title, description=description, color=config.colors.info)
+        client.add_view(ticket_launcher())
+        await intrct.channel.send(embed=embed, view=ticket_launcher())
+        await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
+    else:
+        await intrct.response.send_message(">У вас нет прав для запуска этой команды", ephemeral=True)
 
-client.run(token)
+client.run(config.token)
