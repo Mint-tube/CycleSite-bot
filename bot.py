@@ -1,8 +1,9 @@
 import os, discord, config, asyncio, sqlite3, sys
 from discord import app_commands, Color
-from discord.ext import commands
+from discord.ext import commands, tasks
 from icecream import ic
 from random import randint, choice
+from data.emojis import emojis
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -66,6 +67,12 @@ class confirm_closing(discord.ui.View):
         await interaction.response.send_message(embed=embed)
         await interaction.channel.edit(archived = True, locked = True)
         
+@tasks.loop(seconds = 60) # repeat after every 10 seconds
+async def presence():
+    emoji = choice(emojis)
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+    name = choice(client.get_guild(1122085072577757275).members).display_name +
+    f' {emoji}'))
 
 @client.event
 async def setup_hook():
@@ -77,12 +84,12 @@ async def setup_hook():
 @client.event
 async def on_ready():
     global synced
-    print('')
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='на тебя <3'))
+    presence.start()
     if not synced:
         await tree.sync(guild=discord.Object(id=config.guild))
         synced = True
     print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
+
 
 #Пинг бота по slash-комманде ----------------
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
@@ -95,28 +102,36 @@ async def on_ping(intrct):
 async def on_message(message):
     if message.author == client.user:
         return
-    if randint(0, 10) == 1:
-        await message.add_reaction(choice(message.guild.emojis))
+    if randint(0, 15) == 1:
+        if message.channel.category_id not in config.very_serious_categories:
+            await message.add_reaction(choice(message.guild.emojis))
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str):
-    if intrct.guild.get_role(config.admin_role) in intrct.user.roles:
+    if intrct.guild.get_role(config.bot_engineers) in intrct.user.roles:
         embed = discord.Embed(title=title, description=description, color=config.colors.info)
         client.add_view(ticket_launcher())
         await intrct.channel.send(embed=embed, view=ticket_launcher())
         await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
     else:
-        await intrct.response.send_message(">У вас нет прав для запуска этой команды", ephemeral=True)
+        await intrct.response.send_message("> У вас нет прав для запуска этой команды", ephemeral=True)
 
 
 #Выебать бота (для МАО)
-sex_variants = ['О, да, мао! Выеби меня полностью💕','Боже мой, как сильно...💘','Ещеее! Ещееееее!🥴']
 @tree.command(name="выебать", description="Приветствие бота!", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
-    if intrct.user.id == 879679189425475594:
-        embed = discord.Embed(title = choice(sex_variants),description='', color = config.colors.success)
-        await intrct.response.send_message(embed = embed)
+    sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
+    fucked = False
+    if intrct.channel.is_nsfw():
+        for role in intrct.user.roles:
+            if role.id in config.can_sex:
+                embed = discord.Embed(title = choice(sex_variants),description='', color = config.colors.info)
+                await intrct.response.send_message(embed = embed)
+                fucked = True
+                break
+        if not fucked:
+            await intrct.response.send_message("> Ты не достоин ебать бота 👿", ephemeral = True)
     else:
-        await intrct.response.send_message("Ты не достоин ебать бота👿", ephemeral = True)
+        await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
 
 client.run(config.token)
