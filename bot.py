@@ -1,9 +1,10 @@
-import os, discord, config, asyncio, sqlite3, sys
+import os, discord, asyncio, sqlite3, sys
 from discord import app_commands, Color
 from discord.ext import commands, tasks
 from icecream import ic
 from random import randint, choice
 from data.emojis import emojis
+import data.config as config
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -24,20 +25,15 @@ def tickets_counter_add():
         file.write(str(var + 1))
     return var
 
-# def tickets_counter_read():           ----- На всякий случай, потом вырежу -----
-    # with open('data/tickets_counter.txt', 'r') as file:
-    #     var = int(file.readline())
-    # return var
-
-
 class ticket_launcher(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None) 
     
     @discord.ui.button(label="Открыть тикет", style=discord.ButtonStyle.green, custom_id="open_ticket")
     async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        thread = await interaction.channel.create_thread(name=f"тикет-номер-{tickets_counter_add()}", auto_archive_duration=10080)
-        embed = discord.Embed(title=f"Тикет открыт!", color=config.colors.info)
+        thread = await interaction.channel.create_thread(name=f"тикет-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
+        ticket_id = int(thread.name.split("-")[-1])
+        embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
         embed = interaction_author(embed, interaction)
         await thread.send(embed=embed, view = ticket_operator())
         await thread.send(interaction.guild.get_role(config.admin_role).mention + ' ' + interaction.user.mention)
@@ -60,9 +56,9 @@ class confirm_closing(discord.ui.View):
 
     @discord.ui.button(label="Закрыть", style=discord.ButtonStyle.red)
     async def close(self, interaction, button):
-        embed = discord.Embed(title=f"Тикет номер {interaction.channel.name[-1]} закрыт!", color=config.colors.info)
-
-        #БРО ДОДЕЛАЙ ЭТОТ EMBED
+        ticket_id = int(interaction.channel.name.split("-")[-1])
+        embed = discord.Embed(title=f"Тикет номер {ticket_id} закрыт!", color=config.colors.info)
+        embed = interaction_author(embed, interaction)
         await interaction.user.send(embed=embed)
         await interaction.response.send_message(embed=embed)
         await interaction.channel.edit(archived = True, locked = True)
@@ -108,7 +104,7 @@ async def on_message(message):
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str):
-    if intrct.guild.get_role(config.bot_engineers) in intrct.user.roles:
+    if intrct.user.id in config.bot_engineers:
         embed = discord.Embed(title=title, description=description, color=config.colors.info)
         client.add_view(ticket_launcher())
         await intrct.channel.send(embed=embed, view=ticket_launcher())
