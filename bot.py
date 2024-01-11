@@ -299,7 +299,7 @@ class confirm_closing(discord.ui.View):
         embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
         embed.add_field(name='Перейти к тикету:', value=interaction.channel.jump_url, inline=False)
         await interaction.user.send(embed = embed)
-        await config.tickets_log_channel.send(embed = embed)
+        await interaction.guild.get_channel(config.tickets_log_channel).send(embed = embed)
         await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)
         
