@@ -56,11 +56,17 @@ class confirm_closing(discord.ui.View):
 
     @discord.ui.button(label="Закрыть", style=discord.ButtonStyle.red)
     async def close(self, interaction, button):
-        ticket_id = int(interaction.channel.name.split("-")[-1])
-        embed = discord.Embed(title=f"Тикет номер {ticket_id} закрыт!", color=config.colors.info)
-        embed = interaction_author(embed, interaction)
-        await interaction.user.send(embed=embed)
-        await interaction.response.send_message(embed=embed)
+        ticket_number = int(interaction.channel.name.split("-")[-1])
+        channel = interaction.channel
+        async for first_message in channel.history(limit=1, oldest_first=True):
+            embed = discord.Embed(title=f"Тикет номер {ticket_number} закрыт!", color=config.colors.info)
+            embed.add_field(name='Время открытия:', value=first_message.created_at.date(), inline=True)
+            embed.add_field(name='Открыл:', value=first_message.embeds[0].author.name, inline=True)
+            embed.add_field(name='Время закрытия:', value=interaction.created_at.date(), inline=True)
+            embed.add_field(name='Закрыл:', value=interaction.user, inline=True)
+            embed.add_field(name='Перейти к тикету:', value=first_message.channel.jump_url, inline=False)
+        await interaction.user.send(f"Тикет номер {ticket_number} закрыт!", embed=embed)
+        await interaction.response.send_message(f"Тикет номер {ticket_number} закрыт!", embed=embed)
         await interaction.channel.edit(archived = True, locked = True)
         
 @tasks.loop(seconds = 60) # repeat after every 10 seconds
