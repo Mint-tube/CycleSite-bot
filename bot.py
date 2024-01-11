@@ -314,17 +314,16 @@ def add_views():
     client.add_view(ticket_launcher.question())
     client.add_view(ticket_launcher.bug())
     client.add_view(ticket_launcher.report())
-    client.add_view(ticket_launcher.application())
     client.add_view(ticket_operator())
 
 @client.event
 async def setup_hook():
-    # await tree.sync(guild=discord.Object(id=config.guild))
     add_views()
 
 @client.event
 async def on_ready():
     presence.start()
+    await tree.sync(guild=discord.Object(id=config.guild))
     print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
 
 
