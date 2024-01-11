@@ -163,7 +163,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_scp(ui.Modal, title='Заявка на администратора сервера SCP'):
@@ -185,7 +185,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_discord(ui.Modal, title='Заявка на модератора Discord'): 
@@ -205,7 +205,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_tech(ui.Modal, title='Заявка на тех. админа'):
@@ -225,7 +225,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class eventmaker(ui.Modal, title='Заявка на ивентолога:'):
@@ -243,7 +243,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class organization(ui.Modal, title='Заявка на становление организацией:'):
@@ -264,7 +264,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -298,8 +298,9 @@ class confirm_closing(discord.ui.View):
         embed.add_field(name='Время закрытия:', value=interaction.created_at.date(), inline=True)
         embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
         embed.add_field(name='Перейти к тикету:', value=interaction.channel.jump_url, inline=False)
-        await interaction.user.send(embeds=[embed])
-        await interaction.response.send_message(f"Тикет номер {ticket_number} закрыт!", embed=embed)
+        await interaction.user.send(embed = embed)
+        await config.tickets_log_channel.send(embed = embed)
+        await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)
         
 @tasks.loop(seconds = 60) # repeat after every 10 seconds
