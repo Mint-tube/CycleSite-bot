@@ -53,6 +53,25 @@ class application_type_select(discord.ui.Select):
             case 'Заявка на становление организацией':
                 await interaction.response.send_modal(modal.application.organization())
 
+class report_type_select(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label='Подать жалобу на игрока', emoji='✍🏻'),
+            discord.SelectOption(label='Подать жалобу на администратора', emoji='💥'),
+            discord.SelectOption(label='Подать апелляцию', emoji='🗯'),
+        ]
+
+        super().__init__(placeholder='Что будете подавать?', min_values=1, max_values=1, options=options, custom_id='report_type')
+
+    async def callback(self, interaction: discord.Interaction):
+        match self.values[0]:
+            case 'Подать жалобу на игрока':
+                await interaction.response.send_modal(modal.report.player())
+            case 'Подать жалобу на администратора':
+                await interaction.response.send_modal(modal.report.administrator())
+            case 'Подать апелляцию':
+                await interaction.response.send_modal(modal.report.appeal())
+
 class ticket_launcher():
     class question(discord.ui.View):
         def __init__(self) -> None:
@@ -74,10 +93,7 @@ class ticket_launcher():
     class report(discord.ui.View):
         def __init__(self) -> None:
             super().__init__(timeout=None)
-
-        @discord.ui.button(label="Подать жалобу", style=discord.ButtonStyle.green, custom_id="open_report")
-        async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.send_modal(modal.report())
+            self.add_item(report_type_select())
     
     class application(discord.ui.View):
         def __init__(self) -> None:
@@ -125,25 +141,68 @@ class modal():
             embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    class report(ui.Modal, title='Жалоба'):
-        place = ui.TextInput(label='Место нарушения:', style=discord.TextStyle.short)
-        troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
-        trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
+    class report():
+        class player(ui.Modal, title='Жалоба на игрока'):
+            place = ui.TextInput(label='Место нарушения:', style=discord.TextStyle.short)
+            troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
+            trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
 
-        async def on_submit(self, interaction: discord.Interaction):
-            thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
-            ticket_id = int(thread.name.split("-")[-1])
-            open_embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
-            open_embed = interaction_author(open_embed, interaction)
-            modal_params = discord.Embed(color=config.colors.info)
-            modal_params.add_field(name="**Место нарушения:**", value='>>> ' + self.place.value, inline=False)
-            modal_params.add_field(name="**Нарушитель:**", value='>>> ' + self.troublemaker.value, inline=False)
-            modal_params.add_field(name="**Нарушение:**", value='>>> ' + self.trouble.value, inline=False)
-            await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
-            await thread.send(interaction.user.mention)
-            await thread.send(interaction.guild.get_role(config.admin_role).mention)
-            embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            async def on_submit(self, interaction: discord.Interaction):
+                thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
+                ticket_id = int(thread.name.split("-")[-1])
+                open_embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
+                open_embed = interaction_author(open_embed, interaction)
+                modal_params = discord.Embed(color=config.colors.info)
+                modal_params.add_field(name="**Место нарушения:**", value='>>> ' + self.place.value, inline=False)
+                modal_params.add_field(name="**Нарушитель:**", value='>>> ' + self.troublemaker.value, inline=False)
+                modal_params.add_field(name="**Нарушение:**", value='>>> ' + self.trouble.value, inline=False)
+                await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
+                await thread.send(interaction.user.mention)
+                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+        
+        class administrator(ui.Modal, title='Жалоба на администратора'):
+            place = ui.TextInput(label='Место нарушения:', style=discord.TextStyle.short)
+            troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
+            trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
+
+            async def on_submit(self, interaction: discord.Interaction):
+                thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
+                ticket_id = int(thread.name.split("-")[-1])
+                open_embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
+                open_embed = interaction_author(open_embed, interaction)
+                danger_embed = discord.Embed(title='Жалоба на администратора!', color=config.colors.danger)
+                modal_params = discord.Embed(color=config.colors.info)
+                modal_params.add_field(name="**Место нарушения:**", value='>>> ' + self.place.value, inline=False)
+                modal_params.add_field(name="**Нарушитель:**", value='>>> ' + self.troublemaker.value, inline=False)
+                modal_params.add_field(name="**Нарушение:**", value='>>> ' + self.trouble.value, inline=False)
+                await thread.send(embeds=[open_embed, danger_embed, modal_params], view = ticket_operator())
+                await thread.send(interaction.user.mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
+                embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        class appeal(ui.Modal, title='Аппеляция наказания'):
+            trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.short)
+            punishment = ui.TextInput(label='Наказание:', style=discord.TextStyle.short)
+            appeal_reason = ui.TextInput(label='Почему наказание должно быть снято:', style=discord.TextStyle.long)
+
+            async def on_submit(self, interaction: discord.Interaction):
+                thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
+                ticket_id = int(thread.name.split("-")[-1])
+                open_embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
+                open_embed = interaction_author(open_embed, interaction)
+
+                modal_params = discord.Embed(color=config.colors.info)
+                modal_params.add_field(name="**Нарушение:**", value='>>> ' + self.trouble.value, inline=False)
+                modal_params.add_field(name="**Наказание:**", value='>>> ' + self.punishment.value, inline=False)
+                modal_params.add_field(name="**Почему наказание должно быть снято::**", value='>>> ' + self.appeal_reason.value, inline=False)
+                await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
+                await thread.send(interaction.user.mention)
+                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
 
     class application():
         class player_role(ui.Modal, title='Заявка на постоянного игрока (Канцелярия)'):
@@ -163,7 +222,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_scp(ui.Modal, title='Заявка на администратора сервера SCP'):
@@ -185,7 +244,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_discord(ui.Modal, title='Заявка на модератора Discord'): 
@@ -205,7 +264,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class administrator_tech(ui.Modal, title='Заявка на тех. админа'):
@@ -225,7 +284,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class eventmaker(ui.Modal, title='Заявка на ивентолога:'):
@@ -243,7 +302,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.ssecretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class organization(ui.Modal, title='Заявка на становление организацией:'):
@@ -264,7 +323,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -318,7 +377,7 @@ def add_views():
 
 @client.event
 async def setup_hook():
-    await tree.sync(guild=discord.Object(id=config.guild))
+    # await tree.sync(guild=discord.Object(id=config.guild))
     add_views()
 
 @client.event
