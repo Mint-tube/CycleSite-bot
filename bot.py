@@ -347,11 +347,11 @@ async def on_message(message):
 async def on_member_update(before, after):
     if len(before.roles) < len(after.roles):
         new_role = next(role for role in after.roles if role not in before.roles)
-        if new_role.id == config.admin_role:
+        if new_role.id == config.nitro_booster_id:
             await after.add_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
     elif len(before.roles) > len(after.roles):
         old_role = next(role for role in before.roles if role not in after.roles)
-        if old_role.id == config.admin_role:
+        if old_role.id == config.nitro_booster_id:
             await after.remove_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
 
 #Запуск системы тикетов ----------------
