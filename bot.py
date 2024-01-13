@@ -9,6 +9,7 @@ import data.config as config
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.presences = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
@@ -306,9 +307,10 @@ class confirm_closing(discord.ui.View):
 @tasks.loop(seconds = 60) # repeat after every 10 seconds
 async def presence():
     emoji = choice(emojis)
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-    name = choice(client.get_guild(1122085072577757275).members).display_name +
-    f' {emoji}'))
+    online_members = [member for member in client.get_guild(1122085072577757275).members if not member.bot and member.status == discord.Status.online]
+    if online_members:
+        activity_text = f'{choice(online_members).display_name} {emoji}'
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=activity_text))
 
 def add_views():
     client.add_view(ticket_launcher.question())
