@@ -9,6 +9,7 @@ import data.config as config
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.presences = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
@@ -302,7 +303,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.ssecretary_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         class organization(ui.Modal, title='Заявка на становление организацией:'):
@@ -357,32 +358,33 @@ class confirm_closing(discord.ui.View):
         embed.add_field(name='Время закрытия:', value=interaction.created_at.date(), inline=True)
         embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
         embed.add_field(name='Перейти к тикету:', value=interaction.channel.jump_url, inline=False)
-        await interaction.user.send(embeds=[embed])
-        await interaction.response.send_message(f"Тикет номер {ticket_number} закрыт!", embed=embed)
+        await interaction.user.send(embed = embed)
+        await interaction.guild.get_channel(config.tickets_log_channel).send(embed = embed)
+        await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)
         
 @tasks.loop(seconds = 60) # repeat after every 10 seconds
 async def presence():
     emoji = choice(emojis)
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-    name = choice(client.get_guild(1122085072577757275).members).display_name +
-    f' {emoji}'))
+    online_members = [member for member in client.get_guild(1122085072577757275).members if not member.bot and member.status == discord.Status.online]
+    if online_members:
+        activity_text = f'{choice(online_members).display_name} {emoji}'
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=activity_text))
 
 def add_views():
     client.add_view(ticket_launcher.question())
     client.add_view(ticket_launcher.bug())
     client.add_view(ticket_launcher.report())
-    client.add_view(ticket_launcher.application())
     client.add_view(ticket_operator())
 
 @client.event
 async def setup_hook():
-    # await tree.sync(guild=discord.Object(id=config.guild))
     add_views()
 
 @client.event
 async def on_ready():
     presence.start()
+    await tree.sync(guild=discord.Object(id=config.guild))
     print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
 
 
