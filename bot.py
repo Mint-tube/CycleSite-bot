@@ -318,7 +318,7 @@ def add_views():
 
 @client.event
 async def setup_hook():
-    # await tree.sync(guild=discord.Object(id=config.guild))
+    await tree.sync(guild=discord.Object(id=config.guild))
     add_views()
 
 @client.event
@@ -397,4 +397,28 @@ async def on_sex(intrct):
     else:
         await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
 
+#8ball -----------------
+@tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
+async def magic_ball(intrct):
+    variants = ['Это точно.',
+             'Без сомнения.',
+             'Да, безусловно.',
+             'Вы можете положиться на него.',
+             'На мой взгляд, да.',
+             'Вероятно.',
+             'Перспективы хорошие.',
+             'Да.',
+             'Знаки указывают на да.',
+             'Ответ неясен, попробуйте еще раз.',
+             'Спросите позже.',
+             'Лучше не говорить тебе сейчас.',
+             'Сейчас предсказать невозможно.',
+             'Сосредоточьтесь и спросите еще раз.',
+             'Не рассчитывай на это.',
+             'Мой ответ — нет.',
+             'Мои источники говорят нет.',
+             'Перспективы не очень хорошие.',
+             'Очень сомнительно.']
+    embed = discord.Embed(title = choice(variants), color = config.colors.info)
+    await intrct.response.send_message(embed = embed)
 client.run(config.token)
