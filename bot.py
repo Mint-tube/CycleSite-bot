@@ -342,6 +342,19 @@ async def on_message(message):
         if message.channel.category_id not in config.very_serious_categories:
             await message.add_reaction(choice(message.guild.emojis))
 
+#Выдача и удаление роли Меценат за буст ----------------
+@client.event
+async def on_member_update(before, after):
+    if len(before.roles) < len(after.roles):
+        new_role = next(role for role in after.roles if role not in before.roles)
+        if new_role.id == config.admin_role:
+            await after.add_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
+    elif len(before.roles) > len(after.roles):
+        old_role = next(role for role in before.roles if role not in after.roles)
+        if old_role.id == config.admin_role:
+            await after.remove_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
+
+#Запуск системы тикетов ----------------
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str, type: str):
     if intrct.user.id in config.bot_engineers:
@@ -368,7 +381,7 @@ async def ticketing(intrct, title: str, description: str, type: str):
 
 
 #Выебать бота (для МАО)
-@tree.command(name="выебать", description="Приветствие бота!", guild=discord.Object(id=config.guild))
+@tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
     sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
     fucked = False
