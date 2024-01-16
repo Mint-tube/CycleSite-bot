@@ -148,22 +148,6 @@ class modal():
             troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
             trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
 
-<<<<<<< Updated upstream
-        async def on_submit(self, interaction: discord.Interaction):
-            thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
-            ticket_id = int(thread.name.split("-")[-1])
-            open_embed = discord.Embed(title=f"Тикет номер {ticket_id} открыт!", color=config.colors.info)
-            open_embed = interaction_author(open_embed, interaction)
-            modal_params = discord.Embed(color=config.colors.info)
-            modal_params.add_field(name="**Место нарушения:**", value='>>> ' + self.place.value, inline=False)
-            modal_params.add_field(name="**Нарушитель:**", value='>>> ' + self.troublemaker.value, inline=False)
-            modal_params.add_field(name="**Нарушение:**", value='>>> ' + self.trouble.value, inline=False)
-            await thread.send(embeds=[open_embed, modal_params], view = ticket_operator())
-            await thread.send(interaction.user.mention)
-            await thread.send(interaction.guild.get_role(config.admin_role).mention)
-            embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-=======
             async def on_submit(self, interaction: discord.Interaction):
                 thread = await interaction.channel.create_thread(name=f"жалоба-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
                 ticket_id = int(thread.name.split("-")[-1])
@@ -221,7 +205,6 @@ class modal():
                 await thread.send(interaction.guild.get_role(config.admin_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
->>>>>>> Stashed changes
 
     class application():
         class player_role(ui.Modal, title='Заявка на постоянного игрока (Канцелярия)'):
