@@ -54,6 +54,25 @@ class application_type_select(discord.ui.Select):
             case 'Заявка на становление организацией':
                 await interaction.response.send_modal(modal.application.organization())
 
+class report_type_select(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label='Подать жалобу на игрока', emoji='✍🏻'),
+            discord.SelectOption(label='Подать жалобу на администратора', emoji='💥'),
+            discord.SelectOption(label='Подать апелляцию', emoji='🗯'),
+        ]
+
+        super().__init__(placeholder='Что будете подавать?', min_values=1, max_values=1, options=options, custom_id='report_type')
+
+    async def callback(self, interaction: discord.Interaction):
+        match self.values[0]:
+            case 'Подать жалобу на игрока':
+                await interaction.response.send_modal(modal.report.player())
+            case 'Подать жалобу на администратора':
+                await interaction.response.send_modal(modal.report.administrator())
+            case 'Подать апелляцию':
+                await interaction.response.send_modal(modal.report.appeal())
+
 class ticket_launcher():
     class question(discord.ui.View):
         def __init__(self) -> None:
@@ -75,10 +94,7 @@ class ticket_launcher():
     class report(discord.ui.View):
         def __init__(self) -> None:
             super().__init__(timeout=None)
-
-        @discord.ui.button(label="Подать жалобу", style=discord.ButtonStyle.green, custom_id="open_report")
-        async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-            await interaction.response.send_modal(modal.report())
+            self.add_item(report_type_select())
     
     class application(discord.ui.View):
         def __init__(self) -> None:
@@ -126,10 +142,11 @@ class modal():
             embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    class report(ui.Modal, title='Жалоба'):
-        place = ui.TextInput(label='Место нарушения:', style=discord.TextStyle.short)
-        troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
-        trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
+    class report():
+        class player(ui.Modal, title='Жалоба на игрока'):
+            place = ui.TextInput(label='Место нарушения:', style=discord.TextStyle.short)
+            troublemaker = ui.TextInput(label='Нарушитель:', style=discord.TextStyle.short)
+            trouble = ui.TextInput(label='Нарушение:', style=discord.TextStyle.long)
 
 <<<<<<< Updated upstream
         async def on_submit(self, interaction: discord.Interaction):
@@ -225,7 +242,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
         
@@ -249,7 +266,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -271,7 +288,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -293,7 +310,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -313,7 +330,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -336,7 +353,7 @@ class modal():
                 modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
                 await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
                 await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.applications_admin_role).mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -415,6 +432,19 @@ async def on_message(message):
         if message.channel.category_id not in config.very_serious_categories:
             await message.add_reaction(choice(message.guild.emojis))
 
+#Выдача и удаление роли Меценат за буст ----------------
+@client.event
+async def on_member_update(before, after):
+    if len(before.roles) < len(after.roles):
+        new_role = next(role for role in after.roles if role not in before.roles)
+        if new_role.id == config.nitro_booster_id:
+            await after.add_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
+    elif len(before.roles) > len(after.roles):
+        old_role = next(role for role in before.roles if role not in after.roles)
+        if old_role.id == config.nitro_booster_id:
+            await after.remove_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
+
+#Запуск системы тикетов ----------------
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str, type: str):
     if intrct.user.id in config.bot_engineers:
@@ -441,7 +471,7 @@ async def ticketing(intrct, title: str, description: str, type: str):
 
 
 #Выебать бота (для МАО)
-@tree.command(name="выебать", description="Приветствие бота!", guild=discord.Object(id=config.guild))
+@tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
     sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
     fucked = False
@@ -457,4 +487,28 @@ async def on_sex(intrct):
     else:
         await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
 
+#8ball -----------------
+@tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
+async def magic_ball(intrct):
+    variants = ['Это точно.',
+             'Без сомнения.',
+             'Да, безусловно.',
+             'Вы можете положиться на него.',
+             'На мой взгляд, да.',
+             'Вероятно.',
+             'Перспективы хорошие.',
+             'Да.',
+             'Знаки указывают на да.',
+             'Ответ неясен, попробуйте еще раз.',
+             'Спросите позже.',
+             'Лучше не говорить тебе сейчас.',
+             'Сейчас предсказать невозможно.',
+             'Сосредоточьтесь и спросите еще раз.',
+             'Не рассчитывай на это.',
+             'Мой ответ — нет.',
+             'Мои источники говорят нет.',
+             'Перспективы не очень хорошие.',
+             'Очень сомнительно.']
+    embed = discord.Embed(title = choice(variants), color = config.colors.info)
+    await intrct.response.send_message(embed = embed)
 client.run(config.token)
