@@ -475,7 +475,7 @@ async def on_sex(intrct):
         await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
 
 #8ball -----------------
-@tree.command(name="ball", description="Погадаем~", guild=discord.Object(id=config.guild))
+@tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
 async def magic_ball(intrct):
     variants = ['Это точно.',
              'Без сомнения.',
@@ -508,17 +508,17 @@ async def warn(intrct, user: discord.Member, reason: str):
         await intrct.response.send_message("Нет.", ephemeral=True)
         return
     if user.bot == 1:
-        await intrct.response.send_message("Ты не можешь выдать предупреждение боту.")
+        await intrct.response.send_message("Ты не можешь выдать предупреждение боту.", ephemeral=True)
         return
     if user == intrct.user:
-        await intrct.response.send_message("")
+        await intrct.response.send_message("Бро, попроси кого-нибудь другого...", ephemeral=True)
         return
     dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute('SELECT max(warn_id) FROM warns')
     case_id = cursor.fetchone()[0] + 1
     embed = discord.Embed(
             title=f"Выдано предупреждение!",
-            description=f'Пользователь {user.mention} получил предупреждение \nСлучай №{case_id}',
+            description=f'Пользователь {user.mention} получил предупреждение \nСлучай {case_id}',
             color=config.colors.danger
         )
     interaction_author(embed, intrct)
