@@ -1,10 +1,11 @@
-import os, discord, asyncio, sqlite3, sys
+import os, discord, asyncio, sqlite3, sys, time
 from discord import app_commands, Color, ui
 from discord.ext import commands, tasks
 from icecream import ic
 from random import randint, choice
 from data.emojis import emojis
 import data.config as config
+from datetime import datetime
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -25,6 +26,9 @@ def tickets_counter_add():
     with open('data/tickets_counter.txt', 'w+') as file:
         file.write(str(var + 1))
     return var
+
+def unix_datetime(source):
+    return int(time.mktime(source.timetuple()))
 
 class application_type_select(discord.ui.Select):
     def __init__(self):
@@ -340,7 +344,6 @@ class modal():
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.colors.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
-
 class ticket_operator(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
@@ -364,12 +367,12 @@ class confirm_closing(discord.ui.View):
         async for message in channel.history(limit=2, oldest_first=True):
             if is_first:
                 is_first = False       
-                embed.add_field(name='Время открытия:', value=message.created_at.date(), inline=True)
+                embed.add_field(name='Время открытия:', value=f'<t:{unix_datetime(message.created_at)}>', inline=True)
                 continue     
             embed.add_field(name='Открыл:', value=message.content, inline=True)
-        embed.add_field(name='Время закрытия:', value=interaction.created_at.date(), inline=True)
-        embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
         embed.add_field(name='Перейти к тикету:', value=interaction.channel.jump_url, inline=False)
+        embed.add_field(name='Время закрытия:', value=f'<t:{unix_datetime(interaction.created_at)}>', inline=True)
+        embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
         await interaction.user.send(embed = embed)
         await interaction.guild.get_channel(config.tickets_log_channel).send(embed = embed)
         await interaction.response.send_message(embed = embed)
@@ -405,6 +408,7 @@ async def on_ready():
 async def on_ping(intrct):
     embed = discord.Embed(title="Понг!    ", description=f"{round(client.latency * 1000)}мс", color=config.colors.info)
     await intrct.response.send_message(embed=embed)
+
 
 #Cлучайные реакции на сообщения ----------------
 @client.event 
@@ -471,7 +475,7 @@ async def on_sex(intrct):
         await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
 
 #8ball -----------------
-@tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
+@tree.command(name="ball", description="Погадаем~", guild=discord.Object(id=config.guild))
 async def magic_ball(intrct):
     variants = ['Это точно.',
              'Без сомнения.',
@@ -494,4 +498,40 @@ async def magic_ball(intrct):
              'Очень сомнительно.']
     embed = discord.Embed(title = choice(variants), color = config.colors.info)
     await intrct.response.send_message(embed = embed)
+
+#Ох тыж емое......
+@tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
+async def warn(intrct, user: discord.Member, reason: str):
+    connection = sqlite3.connect('data/primary.db')
+    cursor = connection.cursor()
+    if user.id == client.user.id:
+        await intrct.response.send_message("Нет.", ephemeral=True)
+        return
+    if user.bot == 1:
+        await intrct.response.send_message("Ты не можешь выдать предупреждение боту.")
+        return
+    if user == intrct.user:
+        await intrct.response.send_message("")
+        return
+    dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    cursor.execute('SELECT max(warn_id) FROM warns')
+    case_id = cursor.fetchone()[0] + 1
+    embed = discord.Embed(
+            title=f"Выдано предупреждение!",
+            description=f'Пользователь {user.mention} получил предупреждение \nСлучай №{case_id}',
+            color=config.colors.danger
+        )
+    interaction_author(embed, intrct)
+    embed.add_field(
+            name="Причина:",
+            value=reason,
+            inline=False
+        )
+    await intrct.response.send_message(embed=embed)
+    await config.warns_log_channel.send(embed=embed)
+    response = await intrct.original_response()
+    cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (intrct.user.mention, reason, response.jump_url))
+    connection.commit()
+    connection.close()
+
 client.run(config.token)
