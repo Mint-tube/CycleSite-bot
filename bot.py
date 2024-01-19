@@ -434,45 +434,32 @@ async def on_member_update(before, after):
 #Запуск системы тикетов ----------------
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str, type: str):
-    if intrct.user.id in config.bot_engineers:
-        match type:
-            case 'Вопрос':
-                embed = discord.Embed(title=title, description=description, color=config.colors.info)
-                await intrct.channel.send(embed=embed, view=ticket_launcher.question())
-                client.add_view(ticket_launcher.question())
-            case 'Баг':
-                embed = discord.Embed(title=title, description=description, color=config.colors.danger)
-                await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
-                client.add_view(ticket_launcher.bug())
-            case 'Жалоба':
-                embed = discord.Embed(title=title, description=description, color=config.colors.warning)
-                await intrct.channel.send(embed=embed, view=ticket_launcher.report())
-                client.add_view(ticket_launcher.report())
-            case 'Заявка':
-                embed = discord.Embed(title=title, description=description, color=config.colors.info)
-                await intrct.channel.send(embed=embed, view=ticket_launcher.application())
-                client.add_view(ticket_launcher.application())
-        await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
-    else:
-        await intrct.response.send_message("> У вас нет прав для запуска этой команды", ephemeral=True)
+    match type:
+        case 'Вопрос':
+            embed = discord.Embed(title=title, description=description, color=config.colors.info)
+            await intrct.channel.send(embed=embed, view=ticket_launcher.question())
+            client.add_view(ticket_launcher.question())
+        case 'Баг':
+            embed = discord.Embed(title=title, description=description, color=config.colors.danger)
+            await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
+            client.add_view(ticket_launcher.bug())
+        case 'Жалоба':
+            embed = discord.Embed(title=title, description=description, color=config.colors.warning)
+            await intrct.channel.send(embed=embed, view=ticket_launcher.report())
+            client.add_view(ticket_launcher.report())
+        case 'Заявка':
+            embed = discord.Embed(title=title, description=description, color=config.colors.info)
+            await intrct.channel.send(embed=embed, view=ticket_launcher.application())
+            client.add_view(ticket_launcher.application())
+    await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
 
 
 #Выебать бота (для МАО)
 @tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
     sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
-    fucked = False
-    if intrct.channel.is_nsfw():
-        for role in intrct.user.roles:
-            if role.id in config.can_sex:
-                embed = discord.Embed(title = choice(sex_variants),description='', color = config.colors.info)
-                await intrct.response.send_message(embed = embed)
-                fucked = True
-                break
-        if not fucked:
-            await intrct.response.send_message("> Ты не достоин ебать бота 👿", ephemeral = True)
-    else:
-        await intrct.response.send_message("> Это не NSFW канал!", ephemeral = True)
+    embed = discord.Embed(title = choice(sex_variants),description='', color = config.colors.info)
+    await intrct.response.send_message(embed = embed)
 
 #8ball -----------------
 @tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
@@ -528,7 +515,7 @@ async def warn(intrct, user: discord.Member, reason: str):
             inline=False
         )
     await intrct.response.send_message(embed=embed)
-    await config.warns_log_channel.send(embed=embed)
+    await interaction.guild.get_channel(config.warns_log_channel).send(embed = embed)
     response = await intrct.original_response()
     cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (intrct.user.mention, reason, response.jump_url))
     connection.commit()
