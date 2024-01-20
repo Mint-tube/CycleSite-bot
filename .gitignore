@@ -1,5 +1,5 @@
 data/tickets_counter.txt
-
+primary.db
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

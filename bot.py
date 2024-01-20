@@ -1,6 +1,6 @@
 import os, discord, asyncio, sqlite3, sys, time
 from discord import app_commands, Color, ui
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from icecream import ic
 from random import randint, choice
 from data.emojis import emojis
@@ -378,7 +378,7 @@ class confirm_closing(discord.ui.View):
         await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)
         
-@tasks.loop(seconds = 60) # repeat after every 10 seconds
+@tasks.loop(seconds = 60)
 async def presence():
     emoji = choice(emojis)
     online_members = [member for member in client.get_guild(1122085072577757275).members if not member.bot and member.status == discord.Status.online]
@@ -390,6 +390,7 @@ def add_views():
     client.add_view(ticket_launcher.question())
     client.add_view(ticket_launcher.bug())
     client.add_view(ticket_launcher.report())
+    client.add_view(ticket_launcher.application())
     client.add_view(ticket_operator())
 
 @client.event
@@ -402,15 +403,13 @@ async def on_ready():
     await tree.sync(guild=discord.Object(id=config.guild))
     print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
 
-
-#Пинг бота по slash-комманде ----------------
+#Пинг бота по slash-комманде
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
 async def on_ping(intrct):
     embed = discord.Embed(title="Понг!    ", description=f"{round(client.latency * 1000)}мс", color=config.colors.info)
     await intrct.response.send_message(embed=embed)
 
-
-#Cлучайные реакции на сообщения ----------------
+#Cлучайные реакции на сообщения
 @client.event 
 async def on_message(message):
     if message.author == client.user:
@@ -419,7 +418,7 @@ async def on_message(message):
         if message.channel.category_id not in config.very_serious_categories:
             await message.add_reaction(choice(message.guild.emojis))
 
-#Выдача и удаление роли Меценат за буст ----------------
+#Выдача и удаление роли Меценат за буст
 @client.event
 async def on_member_update(before, after):
     if len(before.roles) < len(after.roles):
@@ -431,7 +430,7 @@ async def on_member_update(before, after):
         if old_role.id == config.nitro_booster_id:
             await after.remove_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
 
-#Запуск системы тикетов ----------------
+#Запуск системы тикетов 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str, type: str):
     match type:
@@ -461,7 +460,7 @@ async def on_sex(intrct):
     embed = discord.Embed(title = choice(sex_variants),description='', color = config.colors.info)
     await intrct.response.send_message(embed = embed)
 
-#8ball -----------------
+#8ball
 @tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
 async def magic_ball(intrct):
     variants = ['Это точно.',
@@ -486,7 +485,23 @@ async def magic_ball(intrct):
     embed = discord.Embed(title = choice(variants), color = config.colors.info)
     await intrct.response.send_message(embed = embed)
 
-#Ох тыж емое......
+@tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
+async def drop(intrct, table: str):
+    if intrct.user.id not in config.bot_engineers:
+        await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
+        return
+    connection = sqlite3.connect('data/primary.db')
+    cursor = connection.cursor()
+    match table:
+        case 'warns':
+            cursor.execute(f'DROP TABLE IF EXISTS {table}')
+            await intrct.response.send_message(f'Таблица {table} была успешно сброшена', ephemeral=True)
+            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT, reason TEXT, message TEXT)')
+            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none")')
+    connection.commit()
+    connection.close()
+
+#Заходит как-то улитка в бар...
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
 async def warn(intrct, user: discord.Member, reason: str):
     connection = sqlite3.connect('data/primary.db')
@@ -498,7 +513,7 @@ async def warn(intrct, user: discord.Member, reason: str):
         await intrct.response.send_message("Ты не можешь выдать предупреждение боту.", ephemeral=True)
         return
     if user == intrct.user:
-        await intrct.response.send_message("Бро, попроси кого-нибудь другого...", ephemeral=True)
+        await intrct.response.send_message("Попроси кого-нибудь другого.", ephemeral=True)
         return
     dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute('SELECT max(warn_id) FROM warns')
@@ -515,10 +530,51 @@ async def warn(intrct, user: discord.Member, reason: str):
             inline=False
         )
     await intrct.response.send_message(embed=embed)
-    await interaction.guild.get_channel(config.warns_log_channel).send(embed = embed)
+    await intrct.guild.get_channel(config.warns_log_channel).send(embed = embed)
     response = await intrct.original_response()
-    cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (intrct.user.mention, reason, response.jump_url))
+    cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (user.mention, reason, response.jump_url))
     connection.commit()
     connection.close()
+
+@tree.command(name="список_варнов", description="Помощь", guild=discord.Object(id=config.guild))
+async def warns_list(intrct, user: discord.Member = None):
+    if not user:
+        user = intrct.user
+    if user == client.user:
+        await intrct.response.send_message("Ты не поверишь!", ephemeral=True)
+        return
+    connection = sqlite3.connect('data/primary.db')
+    cursor = connection.cursor()
+    cursor.execute('SELECT warn_id, reason, message FROM warns WHERE name = ?', (user.mention,))
+    warns = cursor.fetchall()
+    if warns:
+        embed = discord.Embed(title=f'Предупреждения пользователя {user.display_name}:', color=config.colors.warning)
+        interaction_author(embed, intrct)
+        for warn in warns:
+            embed.add_field(
+                name=f'Предупреждение {warn[0]}',
+                value=f'Причина: {warn[1]}  \nСсылка: {warn[2]}',
+                inline=False
+            )
+        await intrct.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title=f'Предупреждения пользователя {user.display_name}:', description='Предупреждений нет, но это всегда можно исправить!', color=config.colors.warning)
+        interaction_author(embed, intrct)
+        await intrct.response.send_message(embed=embed)
+    connection.commit()
+    connection.close()
+
+@tree.command(name='аватар', description='Аватар пользователя', guild=discord.Object(id=config.guild))
+async def avatar(intrct, user: discord.Member = None):
+    if user:
+        embed = discord.Embed(title=f'Аватар пользователя {user.display_name}:', color=config.colors.info)
+        embed.set_image(url=user.display_avatar.url)
+        await intrct.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title=f'Аватар пользователя {intrct.user.display_name}:', color=config.colors.info)
+        embed.set_image(url=intrct.user.display_avatar.url)
+        await intrct.response.send_message(embed=embed)
+
+
 
 client.run(config.token)
