@@ -34,10 +34,12 @@ async def drop_table(table, original_intrct, intrct):
         case 'warns':
             cursor.execute(f'DROP TABLE IF EXISTS {table}')
             await original_intrct.delete_original_response()
-            result = await intrct.response.send_message(f'Таблица варнов была успешно сброшена', ephemeral=True)
+            embed = discord.Embed(title='Таблица варнов была успешно сброшена!', color=config.colors.danger)
+            interaction_author(embed, intrct)
+            result = await intrct.response.send_message(embed=embed)
             cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT, reason TEXT, message TEXT)')
             cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none")')
-    if not "result" in locals():
+    if not "embed" in locals():
         await original_intrct.delete_original_response()
         await intrct.response.send_message(f'Таблицы {table} не существует😨', ephemeral=True)
     connection.commit()
