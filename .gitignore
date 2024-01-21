@@ -1,5 +1,3 @@
-data/tickets_counter.txt
-data/primary.db
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -162,3 +160,4 @@ cython_debug/
 #.idea/
 data/tickets_counter.txt
 example.py
+data/primary.db

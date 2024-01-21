@@ -1,4 +1,4 @@
-import os, discord, asyncio, sqlite3, sys, time
+import os, discord, asyncio, sqlite3, sys, time, socket
 from discord import app_commands, Color, ui
 from discord.ext import tasks
 from icecream import ic
@@ -26,6 +26,22 @@ def tickets_counter_add():
     with open('data/tickets_counter.txt', 'w+') as file:
         file.write(str(var + 1))
     return var
+
+async def drop_table(table, original_intrct, intrct):
+    connection = sqlite3.connect('data/primary.db')
+    cursor = connection.cursor()
+    match table:
+        case 'warns':
+            cursor.execute(f'DROP TABLE IF EXISTS {table}')
+            await original_intrct.delete_original_response()
+            result = await intrct.response.send_message(f'Таблица варнов была успешно сброшена', ephemeral=True)
+            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT, reason TEXT, message TEXT)')
+            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none")')
+    if not "result" in locals():
+        await original_intrct.delete_original_response()
+        await intrct.response.send_message(f'Таблицы {table} не существует😨', ephemeral=True)
+    connection.commit()
+    connection.close()
 
 def unix_datetime(source):
     return int(time.mktime(source.timetuple()))
@@ -378,6 +394,16 @@ class confirm_closing(discord.ui.View):
         await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)
         
+class drop_confirm(discord.ui.View):
+    def __init__(self, table, intrct) -> None:
+        self.table = table
+        self.intrct = intrct
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="ЖМИ! ЖМИ! ЖМИ!", style=discord.ButtonStyle.red, custom_id="close_ticket")
+    async def drop(self, interaction, button):
+        await drop_table(self.table, self.intrct, interaction)
+
 @tasks.loop(seconds = 60)
 async def presence():
     emoji = choice(emojis)
@@ -490,16 +516,9 @@ async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
         await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
         return
-    connection = sqlite3.connect('data/primary.db')
-    cursor = connection.cursor()
-    match table:
-        case 'warns':
-            cursor.execute(f'DROP TABLE IF EXISTS {table}')
-            await intrct.response.send_message(f'Таблица {table} была успешно сброшена', ephemeral=True)
-            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT, reason TEXT, message TEXT)')
-            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none")')
-    connection.commit()
-    connection.close()
+    embed = discord.Embed(title="ТЫ ТОЧНО УВЕРЕН ЧТО ТЫ ХОЧЕШЬ СБРОСИТЬ ТАБЛИЦУ?", description=f"Будет сброшена таблица {table} у {socket.gethostname()}", color=config.colors.danger)
+    await intrct.response.send_message(embed = embed, view = drop_confirm(table, intrct), ephemeral = True, delete_after = config.auto_cancel_time)
+    
 
 #Заходит как-то улитка в бар...
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
