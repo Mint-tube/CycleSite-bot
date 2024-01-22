@@ -551,6 +551,7 @@ async def warn(intrct, user: discord.Member, reason: str):
             inline=False
         )
     await intrct.response.send_message(embed=embed)
+    await intrct.channel.send(user.mention)
     await intrct.guild.get_channel(config.warns_log_channel).send(embed = embed)
     response = await intrct.original_response()
     cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (user.mention, reason, response.jump_url))

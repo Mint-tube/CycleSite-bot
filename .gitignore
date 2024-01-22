@@ -155,4 +155,3 @@ cython_debug/
 data/tickets_counter.txt
 example.py
 data/primary.db
-data/primary.db
