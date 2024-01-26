@@ -67,7 +67,7 @@ async def mute(intrct, target, timespan):
         await intrct.channel.send(embed = embed)
         return
     
-    embed = discord.Embed(title=f'Пользователь был замьючен на {timespan}.', color=config.warning)
+    embed = discord.Embed(title=f'Пользователь был замьючен.', description=f'Он сможет снова говорить <t:{unix_datetime(utils.utcnow() + timedelta(seconds=real_timespan))}:R>', color=config.warning)
     await intrct.channel.send(embed = embed)
 
 
