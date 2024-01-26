@@ -61,13 +61,13 @@ async def mute(intrct, target, timespan):
     
     #Корень зла
     try:
-        await target.timeout(utils.utcnow() + timedelta(seconds=real_timespan))
+        await target.timeout(datetime.now().astimezone() + timedelta(seconds=real_timespan))
     except:
         embed = discord.Embed(title=f'Не удалось замутить пользователя😨', color=config.danger)
         await intrct.channel.send(embed = embed)
         return
     
-    embed = discord.Embed(title=f'Пользователь был замьючен.', description=f'Он сможет снова говорить <t:{unix_datetime(utils.utcnow() + timedelta(seconds=real_timespan))}:R>', color=config.warning)
+    embed = discord.Embed(title=f'Пользователь был замьючен.', description=f'Он сможет снова говорить <t:{unix_datetime(datetime.now().astimezone() + timedelta(seconds=real_timespan))}:R>', color=config.warning)
     await intrct.channel.send(embed = embed)
 
 
