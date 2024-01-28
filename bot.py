@@ -1,4 +1,4 @@
-import os, discord, asyncio, sqlite3, sys, time, socket
+import os, discord, asyncio, sqlite3, sys, time, socket, requests
 from discord import app_commands, Color, ui, utils
 from discord.ext import tasks
 from icecream import ic
@@ -7,13 +7,19 @@ from data.emojis import emojis
 from humanfriendly import parse_timespan, InvalidTimespan
 import data.config as config
 from datetime import datetime, timedelta
+from openai import OpenAI
 
+#Инициализация бота
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.presences = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
+
+#OpenAI API
+ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key='ng-IqawEKgW5IEZABcbQTns4nYCbCsaB')
+
 
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
@@ -39,8 +45,8 @@ async def drop_table(table, original_intrct, intrct):
             embed = discord.Embed(title='Таблица варнов была успешно сброшена!', color=config.danger)
             interaction_author(embed, intrct)
             result = await intrct.response.send_message(embed=embed)
-            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT, reason TEXT, message TEXT)')
-            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none")')
+            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
+            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none", 0)')
     if not "embed" in locals():
         await original_intrct.delete_original_response()
         await intrct.response.send_message(f'Таблицы {table} не существует😨', ephemeral=True)
@@ -71,6 +77,7 @@ async def mute(intrct, target, timespan):
     await intrct.channel.send(embed = embed)
 
 
+#Селекторы и модальные формы
 class application_type_select(discord.ui.Select):
     def __init__(self):
         options = [
@@ -429,6 +436,8 @@ class drop_confirm(discord.ui.View):
     async def drop(self, interaction, button):
         await drop_table(self.table, self.intrct, interaction)
 
+
+
 @tasks.loop(seconds = 60)
 async def presence():
     emoji = choice(emojis)
@@ -436,6 +445,20 @@ async def presence():
     if online_members:
         activity_text = f'{choice(online_members).display_name} {emoji}'
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=activity_text))
+
+@tasks.loop(hours = 1)
+async def lapse_of_warns():
+    connection = sqlite3.connect('data/primary.db')
+    cursor = connection.cursor()
+    cursor.execute('SELECT warn_id, lapse_time FROM warns')
+    warns = cursor.fetchall()
+    warns.pop(0)
+    for warn in warns:
+        if unix_datetime(datetime.now()) >= warn[1]:
+            cursor.execute(f'DELETE FROM warns WHERE warn_id = {warn[0]}')
+    connection.commit()
+    connection.close()
+
 
 def add_views():
     client.add_view(ticket_launcher.question())
@@ -451,6 +474,7 @@ async def setup_hook():
 @client.event
 async def on_ready():
     presence.start()
+    lapse_of_warns.start()
     await tree.sync(guild=discord.Object(id=config.guild))
     print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
 
@@ -541,8 +565,8 @@ async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
         await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
         return
-    embed = discord.Embed(title="ТЫ ТОЧНО УВЕРЕН ЧТО ТЫ ХОЧЕШЬ СБРОСИТЬ ТАБЛИЦУ?", description=f"Будет сброшена таблица {table} у {socket.gethostname()}", color=config.danger)
-    await intrct.response.send_message(embed = embed, view = drop_confirm(table, intrct), ephemeral = True, delete_after = config.auto_cancel_time)
+    embed = discord.Embed(title="Ты точно хочешь сбросить таблицу?", description=f"Будет сброшена таблица {table} у {socket.gethostname()}", color=config.danger)
+    await intrct.response.send_message(embed = embed, view = drop_confirm(table, intrct), ephemeral = True, delete_after = 15)
     
 
 #Заходит как-то улитка в бар...
@@ -573,11 +597,14 @@ async def warn(intrct, user: discord.Member, reason: str):
             value=reason,
             inline=False
         )
+    embed.add_field(
+            name="Истекает:",
+            value=f"<t:{unix_datetime(datetime.now() + timedelta(days=30))}:f>",
+        )
     await intrct.response.send_message(embed=embed)
-    await intrct.channel.send(user.mention)
     await intrct.guild.get_channel(config.warns_log_channel).send(embed = embed)
     response = await intrct.original_response()
-    cursor.execute('INSERT INTO warns (name, reason, message) VALUES (?, ?, ?)', (user.mention, reason, response.jump_url))
+    cursor.execute('INSERT INTO warns (name, reason, message, lapse_time) VALUES (?, ?, ?, ?)', (user.mention, reason, response.jump_url, unix_datetime(datetime.now() + timedelta(days=30))))
     cursor.execute('SELECT * FROM warns WHERE name = ?', (user.mention,))
     players_warns = len(cursor.fetchall())
     match players_warns:
@@ -589,7 +616,7 @@ async def warn(intrct, user: discord.Member, reason: str):
             await mute(intrct, user, '7d')
     if players_warns >= 5:
         await mute(intrct, user, '14d')
-
+    await intrct.channel.send(user.mention)
 
     connection.commit()
     connection.close()
@@ -603,7 +630,7 @@ async def warns_list(intrct, user: discord.Member = None):
         return
     connection = sqlite3.connect('data/primary.db')
     cursor = connection.cursor()
-    cursor.execute('SELECT warn_id, reason, message FROM warns WHERE name = ?', (user.mention,))
+    cursor.execute('SELECT warn_id, reason, message, lapse_time FROM warns WHERE name = ?', (user.mention,))
     warns = cursor.fetchall()
     if warns:
         embed = discord.Embed(title=f'Предупреждения пользователя {user.display_name}:', color=config.warning)
@@ -611,16 +638,32 @@ async def warns_list(intrct, user: discord.Member = None):
         for warn in warns:
             embed.add_field(
                 name=f'Предупреждение {warn[0]}',
-                value=f'Причина: {warn[1]}  \nСсылка: {warn[2]}',
+                value=f'Причина: {warn[1]}  \nСсылка: {warn[2]}   \nИстекает: <t:{warn[3]}:R>',
                 inline=False
             )
         await intrct.response.send_message(embed=embed)
     else:
-        embed = discord.Embed(title=f'Предупреждения пользователя {user.display_name}:', description='Предупреждений нет, но это всегда можно исправить!', color=config.warning)
+        embed = discord.Embed(title=f'Предупреждения пользователя {user.display_name}:', description='Предупреждений нет, но это всегда можно исправить!', color=config.info)
         interaction_author(embed, intrct)
         await intrct.response.send_message(embed=embed)
     connection.commit()
     connection.close()
+
+@tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
+async def warn_del(intrct, warn_id: int):
+    if warn_id > 0:
+        connection = sqlite3.connect('data/primary.db')
+        cursor = connection.cursor()
+        cursor.execute('DELETE FROM warns WHERE warn_id = ?', (warn_id,))
+        embed = discord.Embed(title=f'Варн {warn_id} был успешно снят.', color=config.info)
+        interaction_author(embed, intrct)
+        await intrct.response.send_message(embed=embed)
+        connection.commit()
+        connection.close()
+    else:
+        embed = discord.Embed(title='Не влезай, убьёт!', color=config.danger)
+        await intrct.response.send_message(embed=embed, ephemeral=True)
+    
 
 @tree.command(name='аватар', description='Аватар пользователя', guild=discord.Object(id=config.guild))
 async def avatar(intrct, user: discord.Member = None):
@@ -632,5 +675,7 @@ async def avatar(intrct, user: discord.Member = None):
         embed = discord.Embed(title=f'Аватар пользователя {intrct.user.display_name}:', color=config.info)
         embed.set_image(url=intrct.user.display_avatar.url)
         await intrct.response.send_message(embed=embed)
+
+
 
 client.run(config.token)
