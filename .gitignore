@@ -152,6 +152,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-data/tickets_counter.txt
-example.py
 data/primary.db
