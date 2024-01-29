@@ -83,6 +83,7 @@ class drop_confirm(discord.ui.View):
 
 
 
+#Изменение статуса
 @tasks.loop(seconds = 60)
 async def presence():
     emoji = choice(emojis)
@@ -91,6 +92,8 @@ async def presence():
         activity_text = f'{choice(online_members).display_name} {emoji}'
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=activity_text))
 
+
+#Удаление предупреждений
 @tasks.loop(hours = 1)
 async def lapse_of_warns():
     connection = sqlite3.connect('data/primary.db')
@@ -105,17 +108,16 @@ async def lapse_of_warns():
     connection.close()
 
 
-def add_views():
+#Подгрузка view с тикетами
+@client.event
+async def setup_hook():
     client.add_view(ticket_launcher.question())
     client.add_view(ticket_launcher.bug())
     client.add_view(ticket_launcher.report())
     client.add_view(ticket_launcher.application())
     client.add_view(ticket_operator())
 
-@client.event
-async def setup_hook():
-    add_views()
-
+#Запуск циклов и инфо о запуске
 @client.event
 async def on_ready():
     presence.start()
