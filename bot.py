@@ -8,8 +8,10 @@ from humanfriendly import parse_timespan, InvalidTimespan
 from datetime import datetime, timedelta
 from openai import OpenAI
 
+#Сегодня без монолита(
 import data.config as config
-from data.tickets import ticket_launcher, ticket_operator
+from data.ai_utils import get_api_status, fetch_models, generate_response
+from data.tickets_utils import ticket_launcher, ticket_operator
 
 #Инициализация бота
 intents = discord.Intents.default()
@@ -18,10 +20,6 @@ intents.members = True
 intents.presences = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
-
-#OpenAI API
-naga_client = OpenAI(base_url='https://api.naga.ac/v1', api_key='ng-IqawEKgW5IEZABcbQTns4nYCbCsaB')
-
 
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
@@ -82,7 +80,6 @@ class drop_confirm(discord.ui.View):
         await drop_table(self.table, self.intrct, interaction)
 
 
-
 #Изменение статуса
 @tasks.loop(seconds = 60)
 async def presence():
@@ -131,14 +128,22 @@ async def on_ping(intrct):
     embed = discord.Embed(title="Понг!    ", description=f"{round(client.latency * 1000)}мс", color=config.info)
     await intrct.response.send_message(embed=embed)
 
-#Cлучайные реакции на сообщения
 @client.event 
 async def on_message(message):
+    #Случайные реакции
     if message.author == client.user:
         return
-    if randint(0, 15) == 1:
+    if randint(0, 20) == 1:
         if message.channel.category_id not in config.very_serious_categories:
             await message.add_reaction(choice(message.guild.emojis))
+
+    #Чат гпт
+    if message.mentions and int(client.user.mention.replace(f'<@{client.user.id}>', str(client.user.id))) == message.mentions[0].id and message.channel.id in config.ai_channels:
+        for mention in message.mentions:
+                message.content = message.content.replace(f'<@{mention.id}>', f'{mention.display_name}')
+        await message.add_reaction("☑")
+        async with message.channel.typing():
+            await message.channel.send(generate_response(message.content))
 
 #Выдача и удаление роли Меценат за буст
 @client.event
