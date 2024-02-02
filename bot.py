@@ -7,6 +7,7 @@ from data.emojis import emojis
 from humanfriendly import parse_timespan, InvalidTimespan
 from datetime import datetime, timedelta
 from openai import OpenAI
+from discord_webhook import DiscordWebhook, DiscordEmbed
 
 #Сегодня без монолита(
 import data.config as config
@@ -321,6 +322,53 @@ async def avatar(intrct, user: discord.Member = None):
         embed.set_image(url=intrct.user.display_avatar.url)
         await intrct.response.send_message(embed=embed)
 
+@client.event
+async def on_message_delete(message):
+    try:
+        webhook = DiscordWebhook(
+        url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
+        rate_limit_retry=True)
+        embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено")
+        embed.set_author(name=f"{message.author}")
+        embed.add_embed_field(name="Сообщение", value=f"```{message.content}```")
+        embed.add_embed_field(name="Канал", value=f"{message.channel.mention}")
+        webhook.add_embed(embed)
+        response = webhook.execute()
+    except:
+        webhook = DiscordWebhook(
+            url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
+            rate_limit_retry=True)
+        embed = DiscordEmbed(title=':wastebasket: Сообщение Удалено')
+        embed.set_author(name=f"{message.author}")
+        embed.add_embed_field(name="Сообщение", value=f"```{message.content}```")
+        webhook.add_embed(embed)
+        response = webhook.execute()
 
+@client.event
+async def on_message_edit(message_before, message_after):
+    if f"{message_before.content}" != f"{message_after.content}":
+        try:
+            webhook = DiscordWebhook(
+            url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
+            rate_limit_retry=True)
+            embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
+            embed.set_author(name=f"{message_before.author}")
+            embed.add_embed_field(name="До", value=f"```{message_before.content}```")
+            embed.add_embed_field(name="После", value=f"```{message_after.content}```")
+            embed.add_embed_field(name="Канал", value=f"{message_after.channel.mention}")
+            webhook.add_embed(embed)
+            response = webhook.execute()
+        except:
+            webhook = DiscordWebhook(
+                url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
+                rate_limit_retry=True)
+            embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
+            embed.set_author(name=f"{message_before.author}")
+            embed.add_embed_field(name="До", value=f"```{message_before.content}```")
+            embed.add_embed_field(name="После", value=f"```{message_after.content}```")
+            webhook.add_embed(embed)
+            response = webhook.execute()
+    else:
+        ()
 
 client.run(config.token)
