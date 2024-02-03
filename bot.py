@@ -324,51 +324,31 @@ async def avatar(intrct, user: discord.Member = None):
 
 @client.event
 async def on_message_delete(message):
-    try:
-        webhook = DiscordWebhook(
-        url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
-        rate_limit_retry=True)
-        embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено")
-        embed.set_author(name=f"{message.author}")
-        embed.add_embed_field(name="Сообщение", value=f"```{message.content}```")
-        embed.add_embed_field(name="Канал", value=f"{message.channel.mention}")
-        webhook.add_embed(embed)
-        response = webhook.execute()
-    except:
-        webhook = DiscordWebhook(
-            url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
-            rate_limit_retry=True)
-        embed = DiscordEmbed(title=':wastebasket: Сообщение Удалено')
-        embed.set_author(name=f"{message.author}")
-        embed.add_embed_field(name="Сообщение", value=f"```{message.content}```")
-        webhook.add_embed(embed)
-        response = webhook.execute()
+    webhook = DiscordWebhook(
+        url = config.main_logs_webhook_url,
+        rate_limit_retry = True
+    )
+    embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено")
+    embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
+    embed.add_embed_field(name="Сообщение", value=str(message.content), inline=False)
+    embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
+    webhook.add_embed(embed)
+    response = webhook.execute()
 
 @client.event
 async def on_message_edit(message_before, message_after):
-    if f"{message_before.content}" != f"{message_after.content}":
-        try:
-            webhook = DiscordWebhook(
-            url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
-            rate_limit_retry=True)
-            embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
-            embed.set_author(name=f"{message_before.author}")
-            embed.add_embed_field(name="До", value=f"```{message_before.content}```")
-            embed.add_embed_field(name="После", value=f"```{message_after.content}```")
-            embed.add_embed_field(name="Канал", value=f"{message_after.channel.mention}")
-            webhook.add_embed(embed)
-            response = webhook.execute()
-        except:
-            webhook = DiscordWebhook(
-                url="https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB",
-                rate_limit_retry=True)
-            embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
-            embed.set_author(name=f"{message_before.author}")
-            embed.add_embed_field(name="До", value=f"```{message_before.content}```")
-            embed.add_embed_field(name="После", value=f"```{message_after.content}```")
-            webhook.add_embed(embed)
-            response = webhook.execute()
-    else:
-        ()
+    if str(message_before.content) != str(message_after.content) and str(message_after.content) != '':      
+        webhook = DiscordWebhook(
+            url = config.main_logs_webhook_url,
+            rate_limit_retry = True
+        )
+        embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
+        embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
+        embed.add_embed_field(name="До", value=str(message_before.content), inline=False)
+        embed.add_embed_field(name="После", value=str(message_after.content), inline=False)
+        embed.add_embed_field(name="Канал", value=str(message_after.channel.mention), inline=False)
+        webhook.add_embed(embed)
+        response = webhook.execute()
+
 
 client.run(config.token)

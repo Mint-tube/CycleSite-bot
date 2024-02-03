@@ -20,3 +20,5 @@ very_serious_categories = [1123186876724035624, 1132586162356244480, 11326145012
 tickets_log_channel = 1174675122976735353 #Канал для логов закрытых тикетов
 warns_log_channel = 1133679118882459675 #Канал для логов предупреждений
 ai_channels = [1195776115613126738, 1172161486630686751] #Каналы для чата с ботом
+main_logs_webhook_url = 'https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB'
+private_logs_webhook_url = 'https://discord.com/api/webhooks/1203371359745609840/IBgMhj0iC07U6UizACoydbGjRser2L-VEeqtbqjH8UC-H2W63B1ebX5UZuzei-_4Pndy'
