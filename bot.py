@@ -329,14 +329,26 @@ async def avatar(intrct, user: discord.Member = None):
 
 @client.event
 async def on_message_delete(message):
+    if message.author == client.user:
+        return
+    attachments = ''
+    if message.attachments:
+        attachments_temp = []
+        for attachment in message.attachments:
+            attachments_temp.append(attachment.url)
+        attachments = '\n'.join(attachments_temp)
+
     webhook = DiscordWebhook(
         url = config.main_logs_webhook_url,
         rate_limit_retry = True
     )
-    embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено")
+    embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено", color=config.info)
     embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
     embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
-    embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```"), inline=False)
+    if message.content != '':
+        embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
+    else:
+        embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
     embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
     webhook.add_embed(embed)
     response = webhook.execute()
@@ -348,7 +360,7 @@ async def on_message_edit(message_before, message_after):
             url = config.main_logs_webhook_url,
             rate_limit_retry = True
         )
-        embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано')
+        embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано', color=config.info)
         embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
         embed.add_embed_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
         embed.add_embed_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
