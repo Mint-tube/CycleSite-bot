@@ -11,7 +11,7 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 
 #Сегодня без монолита(
 import data.config as config
-from data.ai_utils import get_api_status, fetch_models, generate_response
+from data.ai_utils import api_status, fetch_models, generate_response
 from data.tickets_utils import ticket_launcher, ticket_operator
 
 #Инициализация бота
@@ -140,11 +140,16 @@ async def on_message(message):
 
     #Чат гпт
     if message.mentions and int(client.user.mention.replace(f'<@{client.user.id}>', str(client.user.id))) == message.mentions[0].id and message.channel.id in config.ai_channels:
-        for mention in message.mentions:
-                message.content = message.content.replace(f'<@{mention.id}>', f'{mention.display_name}')
-        await message.add_reaction("☑")
-        async with message.channel.typing():
-            await message.channel.send(generate_response(message.content))
+        if api_status.status_code != 200:
+            await message.add_reaction("❎")
+            embed = discord.Embed(title='Невозможно подключится к API', description=f'**{api_status.status_code}: {api_status.reason}**', color=config.warning)
+            await message.channel.send(embed = embed, delete_after = 15)
+        else:
+            await message.add_reaction("☑")
+            for mention in message.mentions:
+                    message.content = message.content.replace(f'<@{mention.id}>', f'{mention.display_name}')
+            async with message.channel.typing():
+                await message.channel.send(generate_response(message.content))
 
 #Выдача и удаление роли Меценат за буст
 @client.event

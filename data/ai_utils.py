@@ -6,9 +6,10 @@ from icecream import ic
 
 ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key=config.naga_api_key)
 
-def get_api_status():
+class api_status():
     response = requests.get('https://api.naga.ac/v1/models')
-    return response.status_code
+    status_code = response.status_code
+    reason = response.reason
 
 def fetch_models():
     models = []
@@ -55,5 +56,6 @@ def generate_response(prompt, model = 'gpt-3.5-turbo'):
         model=model,
         messages=messages
     )
+
     message = response.choices[0].message.content
     return message
