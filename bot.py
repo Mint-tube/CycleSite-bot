@@ -404,11 +404,11 @@ async def on_voice_state_update(member, state_before, state_after):
 
 @client.event
 async def on_member_join(member):
-    webhook = DiscordWebhook(
+        webhook = DiscordWebhook(
             url = config.main_logs_webhook_url,
             rate_limit_retry = True
         )
-        embed = DiscordEmbed(description='Пользователь Присоединился')
+        embed = DiscordEmbed(title='Пользователь Присоединился')
         embed.set_author(name=str(member.name), icon_url=str(member.display_avatar))
         embed.add_embed_field(name="Пользователь", value=str(member.mention), inline=False)
         embed.add_embed_field(name="Дата Создания", value=str(f"```{member.created_at.strftime("%b %d, %Y")}```"), inline=False)
@@ -421,7 +421,7 @@ async def on_member_remove(member):
             url = config.main_logs_webhook_url,
             rate_limit_retry = True
         )
-        embed = DiscordEmbed(description='Пользователь Покинул Сервер')
+        embed = DiscordEmbed(title='Пользователь Покинул Сервер')
         embed.set_author(name=str(member.name), icon_url=str(member.display_avatar))
         embed.add_embed_field(name="Пользователь", value=str(member.mention), inline=False)
         embed.add_embed_field(name="Дата Присоединения", value=str(f"```{member.joined_at.strftime("%b %d, %Y")}```"), inline=False)
