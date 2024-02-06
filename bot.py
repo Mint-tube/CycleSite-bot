@@ -214,6 +214,18 @@ async def magic_ball(intrct):
     embed = discord.Embed(title = choice(variants), color = config.info)
     await intrct.response.send_message(embed = embed)
 
+@tree.command(name="написать", description="Отослать хрень", guild=discord.Object(id=config.guild))
+async def send_embed(intrct, channel_id: int, message_id: int, *, text: str):
+    try:
+        channel = bot.get_channel(channel_id)
+        message = await channel.fetch_message(message_id)
+
+        embed = discord.Embed(description=text, color=0x00ff00)
+        await message.edit(embed=embed)
+
+    except Exception as e:
+        print(f'Ошибка: {e}')
+
 @tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
 async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
@@ -243,7 +255,7 @@ async def warn(intrct, user: discord.Member, reason: str):
             description=f'Пользователь {user.mention} получил предупреждение \nСлучай {case_id}',
             color=config.info
         )
-    interaction_author(embed, intrct)
+    interaction_author(embed, intrct)https://discord.gg/EdHYkm7T7a?event=1204442701290930206
     embed.add_field(
             name="Причина:",
             value=reason,
@@ -338,36 +350,30 @@ async def on_message_delete(message):
             attachments_temp.append(attachment.url)
         attachments = '\n'.join(attachments_temp)
 
-    webhook = DiscordWebhook(
-        url = config.main_logs_webhook_url,
-        rate_limit_retry = True
-    )
-    embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено", color=config.info)
-    embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
-    embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
-    if message.content != '':
-        embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
-    else:
-        embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
-    embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
-    webhook.add_embed(embed)
-    response = webhook.execute()
+    channel = client.get_channel(YOUR_SPECIFIC_CHANNEL_ID)  # Replace YOUR_SPECIFIC_CHANNEL_ID with the actual channel ID
+    if channel:
+        embed = DiscordEmbed(title=":wastebasket: Сообщение Удалено", color=config.info)
+        embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
+        embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
+        if message.content != '':
+            embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
+        else:
+            embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
+        embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
+        await channel.send(embed=embed)
 
 @client.event
 async def on_message_edit(message_before, message_after):
-    if str(message_before.content) != str(message_after.content) and str(message_after.content) != '':      
-        webhook = DiscordWebhook(
-            url = config.main_logs_webhook_url,
-            rate_limit_retry = True
-        )
-        embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано', color=config.info)
-        embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
-        embed.add_embed_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
-        embed.add_embed_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
-        embed.add_embed_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
-        embed.add_embed_field(name="Канал", value=str(message_after.channel.mention), inline=False)
-        webhook.add_embed(embed)
-        response = webhook.execute()
+    if str(message_before.content) != str(message_after.content) and str(message_after.content) != '':
+        channel = client.get_channel(YOUR_SPECIFIC_CHANNEL_ID)  # Replace YOUR_SPECIFIC_CHANNEL_ID with the actual channel ID
+        if channel:
+            embed = DiscordEmbed(title=':pencil2: Сообщение Отредактировано', color=config.info)
+            embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
+            embed.add_embed_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
+            embed.add_embed_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
+            embed.add_embed_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
+            embed.add_embed_field(name="Канал", value=str(message_after.channel.mention), inline=False)
+            await channel.send(embed=embed)
 
 
 client.run(config.token)
