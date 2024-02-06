@@ -214,18 +214,6 @@ async def magic_ball(intrct):
     embed = discord.Embed(title = choice(variants), color = config.info)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name="написать", description="Отослать хрень", guild=discord.Object(id=config.guild))
-async def send_embed(intrct, channel_id: int, message_id: int, *, text: str):
-    try:
-        channel = bot.get_channel(channel_id)
-        message = await channel.fetch_message(message_id)
-
-        embed = discord.Embed(description=text, color=0x00ff00)
-        await message.edit(embed=embed)
-
-    except Exception as e:
-        print(f'Ошибка: {e}')
-
 @tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
 async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
