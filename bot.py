@@ -46,6 +46,11 @@ async def drop_table(table, original_intrct, intrct):
     connection.commit()
     connection.close()
 
+async def send_embed_via_webhook(url: str, embed: discord.Embed):
+    webhook = DiscordWebhook(url=url, rate_limit_retry=True)
+    webhook.add_embed(embed)
+    return webhook.execute()
+
 #Перевод даты в unix (секунды)
 def unix_datetime(source):
     return int(time.mktime(source.timetuple()))
@@ -331,17 +336,15 @@ async def avatar(intrct, user: discord.Member = None):
 async def on_message_delete(message):
     if message.author == client.user:
         return
+
     attachments = ''
+
     if message.attachments:
         attachments_temp = []
         for attachment in message.attachments:
             attachments_temp.append(attachment.url)
         attachments = '\n'.join(attachments_temp)
 
-    webhook = DiscordWebhook(
-        url = config.main_logs_webhook_url,
-        rate_limit_retry = True
-    )
     embed = DiscordEmbed(title="🗑️ Сообщение Удалено", color=config.info)
     embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
     embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
@@ -350,24 +353,26 @@ async def on_message_delete(message):
     else:
         embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
     embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
-    webhook.add_embed(embed)
-    response = webhook.execute()
+
+    if message.channel.category_id in config.very_secret_categories:
+        await send_embed_via_webhook(config.webhooks.private_logs, embed)
+    else:
+        await send_embed_via_webhook(config.webhooks.main_logs, embed)
 
 @client.event
 async def on_message_edit(message_before, message_after):
     if str(message_before.content) != str(message_after.content) and str(message_after.content) != '':      
-        webhook = DiscordWebhook(
-            url = config.main_logs_webhook_url,
-            rate_limit_retry = True
-        )
         embed = DiscordEmbed(title='✏️ Сообщение Отредактировано', color=config.info)
         embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
         embed.add_embed_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
         embed.add_embed_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
         embed.add_embed_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
         embed.add_embed_field(name="Канал", value=str(message_after.channel.mention), inline=False)
-        webhook.add_embed(embed)
-        response = webhook.execute()
+
+        if message_after.channel.category_id in config.very_secret_categories:
+            await send_embed_via_webhook(config.webhooks.private_logs, embed)
+        else:
+            await send_embed_via_webhook(config.webhooks.main_logs, embed)
 
 @client.event
 async def on_voice_state_update(member, state_before, state_after):
@@ -375,38 +380,26 @@ async def on_voice_state_update(member, state_before, state_after):
     voice_channel_before = state_before.channel
     voice_channel_after = state_after.channel
     
+    webhook = DiscordWebhook(
+        url = config.webhooks.voice_logs,
+        rate_limit_retry = True
+    )
+
     if voice_channel_before == voice_channel_after:
         return
     
     if voice_channel_before == None:
-        webhook = DiscordWebhook(
-            url = config.main_logs_webhook_url,
-            rate_limit_retry = True
-        )
         embed = DiscordEmbed(description=f'**{member.mention} присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        webhook.add_embed(embed)
-        response = webhook.execute()
-        return
 
     elif voice_channel_after == None:
-        webhook = DiscordWebhook(
-            url = config.main_logs_webhook_url,
-            rate_limit_retry = True
-        )
         embed = DiscordEmbed(description=f'**{member.mention} вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        webhook.add_embed(embed)
-        response = webhook.execute()
-        return
 
-    webhook = DiscordWebhook(
-        url = config.main_logs_webhook_url,
-        rate_limit_retry = True
-    )
-    embed = DiscordEmbed(description=f'**{member.mention} перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
-    embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-    webhook.add_embed(embed)
-    response = webhook.execute()
+    else:
+        embed = DiscordEmbed(description=f'**{member.mention} перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
+        embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
+    
+    await send_embed_via_webhook(config.webhooks.voice_logs, embed)
 
 client.run(config.token)
