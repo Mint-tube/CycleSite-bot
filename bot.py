@@ -369,4 +369,58 @@ async def on_message_edit(message_before, message_after):
         webhook.add_embed(embed)
         response = webhook.execute()
 
+@client.event
+async def on_voice_state_update(member_before, member_after):
+    
+    voice_channel_before = member_before.voice_channel
+    voice_channel_after = member_after.voice_channel
+    
+    if voice_channel_before == voice_channel_after:
+        # No change
+        return
+    
+    if voice_channel_before == None:
+        # The member was not on a voice channel before the change
+        msg = "%s joined voice channel _%s_" % (member_after.mention, voice_channel_after.name)
+        webhook = DiscordWebhook(
+            url = config.main_logs_webhook_url,
+            rate_limit_retry = True
+        )
+        embed = DiscordEmbed(title='Пользователь Присоединился', color=config.info)
+        embed.set_author(name=str(member_after.author), icon_url=str(member_after.author.display_avatar))
+        embed.add_embed_field(name="Пользователь", value=str(member_after.mention), inline=False)
+        embed.add_embed_field(name="Канал", value=str(voice_channel_after.name), inline=False)
+        webhook.add_embed(embed)
+        response = webhook.execute()
+
+    else:
+        # The member was on a voice channel before the change
+        if voice_channel_after == None:
+            # The member is no longer on a voice channel after the change
+            msg = "%s left voice channel _%s_" % (member_after.mention, voice_channel_before.name)
+            webhook = DiscordWebhook(
+                url = config.main_logs_webhook_url,
+                rate_limit_retry = True
+            )
+            embed = DiscordEmbed(title='Пользователь Вышел', color=config.info)
+            embed.set_author(name=str(member_after.author), icon_url=str(member_after.author.display_avatar))
+            embed.add_embed_field(name="Пользователь", value=str(member_after.mention), inline=False)
+            embed.add_embed_field(name="Канал", value=str(voice_channel_before.name), inline=False)
+            webhook.add_embed(embed)
+            response = webhook.execute()
+        else:
+            # The member is still on a voice channel after the change
+            msg = "%s switched from voice channel _%s_ to _%s_" % (member_after.mention, voice_channel_before.name, voice_channel_after.name)
+            webhook = DiscordWebhook(
+                url = config.main_logs_webhook_url,
+                rate_limit_retry = True
+            )
+            embed = DiscordEmbed(title='Пользователь Сменил Канал', color=config.info)
+            embed.set_author(name=str(member_after.author), icon_url=str(member_after.author.display_avatar))
+            embed.add_embed_field(name="Пользователь", value=str(member_after.mention), inline=False)
+            embed.add_embed_field(name="Канал До", value=str(voice_channel_before.name), inline=False)
+            embed.add_embed_field(name="Канал После", value=str(voice_channel_after.name), inline=False)
+            webhook.add_embed(embed)
+            response = webhook.execute()
+
 client.run(config.token)
