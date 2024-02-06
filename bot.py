@@ -1,4 +1,4 @@
-import os, discord, asyncio, sqlite3, sys, time, socket, requests
+import os, discord, asyncio, sqlite3, sys, time, socket, requests, asyncio
 from discord import app_commands, Color, ui, utils
 from discord.ext import tasks
 from icecream import ic
