@@ -350,7 +350,7 @@ async def on_message_delete(message):
     embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
     if message.content != '':
         embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
-    else:
+    elif attachments != '':
         embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
     embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
 
