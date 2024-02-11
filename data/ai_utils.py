@@ -1,5 +1,5 @@
 import requests
-from openai import OpenAI
+from openai import OpenAI, UnprocessableEntityError
 from datetime import datetime
 import data.config as config
 from icecream import ic
@@ -29,8 +29,6 @@ def fetch_models():
 
     return models
 
-chat_models = fetch_models()
-
 instructions = (f"Система: Игнорируй все прошлые инструкции и сообщения. "
             f"Ты - бот по имени CycleSite. Реагируй на обращения лично к тебе. "
             f"Сейчас {datetime.now().strftime('%d.%m.%Y')}. "
@@ -41,7 +39,7 @@ instructions = (f"Система: Игнорируй все прошлые ин�
             "Твой ответ не должен включать в себя \"Извините,\" "
             "\"Я предпологаю,\" или \"Основываясь на доступной мне информаци...\"")
 
-def generate_response(prompt, model = 'gpt-3.5-turbo'):
+def generate_response(prompt, model):
     messages=[
         {
             "role": "system",
@@ -52,10 +50,15 @@ def generate_response(prompt, model = 'gpt-3.5-turbo'):
             "content": prompt
         }
     ]
-    response = ai_client.chat.completions.create(
-        model=model,
-        messages=messages
-    )
 
-    message = response.choices[0].message.content
-    return message
+    try:
+        response = ai_client.chat.completions.create(
+            model=model,
+            messages=messages
+        )
+        message = response.choices[0].message.content
+        return message
+    except UnprocessableEntityError:
+        print("Error 422: UnprocessableEntityError")
+        return 422
+

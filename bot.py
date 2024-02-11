@@ -22,6 +22,8 @@ intents.presences = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
+active_model = 'gpt-3.5-turbo'
+
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
     embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar)
@@ -154,7 +156,13 @@ async def on_message(message):
             for mention in message.mentions:
                     message.content = message.content.replace(f'<@{mention.id}>', f'{mention.display_name}')
             async with message.channel.typing():
-                await message.channel.send(generate_response(message.content))
+                response = generate_response(message.content, model=active_model)
+                if type(response) == int:
+                    await message.add_reaction("🚫")
+                    embed = discord.Embed(description=f'**Ошибка {response}**', color=config.danger)
+                    await message.channel.send(embed = embed, delete_after = 15)
+                else:
+                    await message.channel.send(response)
 
 #Выдача и удаление роли Меценат за буст
 @client.event
@@ -331,6 +339,17 @@ async def avatar(intrct, user: discord.Member = None):
         embed = discord.Embed(title=f'Аватар пользователя {intrct.user.display_name}:', color=config.info)
         embed.set_image(url=intrct.user.display_avatar.url)
         await intrct.response.send_message(embed=embed)
+
+@tree.command(name='сменить_ии', description='Сменить ИИ', guild=discord.Object(id=config.guild))
+async def change_gpt_model(intrct, model: str):
+    if model in fetch_models():
+        global active_model
+        active_model = model
+        embed = discord.Embed(description=f'**ИИ был успешно изменен на {model}.**', color=config.info)
+        await intrct.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(title='Список доступных моделей:', description='\n'.join(fetch_models()), color=config.info)
+        await intrct.response.send_message(embed=embed, ephemeral=True)
 
 @client.event
 async def on_message_delete(message):
