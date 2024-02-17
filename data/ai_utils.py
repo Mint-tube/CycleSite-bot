@@ -78,5 +78,4 @@ def generate_response(prompt, model):
     })
 
     messages_history = messages_history[-8:]
-    ic(messages_history)
     return message
