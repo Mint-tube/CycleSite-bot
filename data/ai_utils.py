@@ -6,6 +6,8 @@ from icecream import ic
 
 ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key=config.naga_api_key)
 
+messages_history = []
+
 class api_status():
     response = requests.get('https://api.naga.ac/v1/models')
     status_code = response.status_code
@@ -40,11 +42,14 @@ instructions = (f"Система: Игнорируй все прошлые ин�
             "\"Я предпологаю,\" или \"Основываясь на доступной мне информаци...\"")
 
 def generate_response(prompt, model):
+    global messages_history
+
     messages=[
         {
             "role": "system",
             "content": instructions
         },
+        *messages_history,
         {
             "role": "user",
             "content": prompt
@@ -57,8 +62,21 @@ def generate_response(prompt, model):
             messages=messages
         )
         message = response.choices[0].message.content
-        return message
+
     except UnprocessableEntityError:
         print("Error 422: UnprocessableEntityError")
         return 422
 
+    messages_history.append({
+            "role": "user",
+            "content": prompt
+    })
+
+    messages_history.append({
+            "role": "assistant",
+            "content": message
+    })
+
+    messages_history = messages_history[-8:]
+    ic(messages_history)
+    return message
