@@ -9,9 +9,14 @@ ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key=config.naga_api_ke
 messages_history = []
 
 class api_status():
-    response = requests.get('https://api.naga.ac/v1/models')
-    status_code = response.status_code
-    reason = response.reason
+    try:
+        response = requests.get('https://api.naga.ac/v1/models')
+        status_code = response.status_code
+        reason = response.reason
+    except requests.exceptions.ConnectTimeout:
+        print('Не получен ответ от NagaAI, ИИ недоступен.')
+        status_code = 503
+        reason = 'Ответ не получен'
 
 def fetch_models():
     models = []
