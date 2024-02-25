@@ -28,3 +28,9 @@ class webhooks():
     main_logs = 'https://discord.com/api/webhooks/1172796781562703932/md7f5TJhqwlSB_zwxEvLiIPvmifUVUHkJHvg0hWvpeK0qU6CgQVrtgO5ybswKD6NLydB'
     private_logs = 'https://discord.com/api/webhooks/1203371359745609840/IBgMhj0iC07U6UizACoydbGjRser2L-VEeqtbqjH8UC-H2W63B1ebX5UZuzei-_4Pndy'
     voice_logs = 'https://discord.com/api/webhooks/1204502508752470106/7MJT-4YE0IpK5aGdfVoFy_wTuPnOKnzWmkf1M2Jp1uiX9Te_NjEAE7E2kp7p0yDNMnFK'
+
+
+#ugh yep
+bg_placeholder = 'https://avatars.mds.yandex.net/i?id=db66ef08ce22da10f91ffa6f04bd232b67b10155-8507274-images-thumbs&n=13'
+border_placeholder = 'https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg'
+defaul_xp_color = '#ffffff'
