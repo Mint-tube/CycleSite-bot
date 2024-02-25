@@ -4,7 +4,7 @@ import datetime
 init(autoreset=True)
 
 def datestr():
-    return f'{Fore.BLACK}{Style.DIM}{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {Style.RESET_ALL}'
+    return f'{Fore.BLACK}{Style.BRIGHT}{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {Style.RESET_ALL}'
 
 def debug(message):
     print(datestr() + f'{Style.BRIGHT}{Fore.CYAN}DEBUG    {Style.RESET_ALL}' + message)
