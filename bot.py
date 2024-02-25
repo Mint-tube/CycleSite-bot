@@ -3,7 +3,6 @@ from discord import app_commands, Color, ui, utils
 from discord.ext import tasks
 from icecream import ic
 from random import randint, choice
-from data.emojis import emojis
 from humanfriendly import parse_timespan, InvalidTimespan
 from datetime import datetime, timedelta
 from openai import OpenAI
@@ -11,8 +10,11 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 
 #Сегодня без монолита(
 import data.config as config
+from data.emojis import emojis
 from data.ai_utils import api_status, fetch_models, generate_response
 from data.tickets_utils import ticket_launcher, ticket_operator
+from data.logging import debug, info, warning, error
+from colorama import Fore, Back, Style, init
 
 #Инициализация бота
 intents = discord.Intents.default()
@@ -128,7 +130,7 @@ async def on_ready():
     presence.start()
     lapse_of_warns.start()
     await tree.sync(guild=discord.Object(id=config.guild))
-    print(f'{client.user.name} подключён к серверу!    \n{round(client.latency * 1000)}ms')
+    info(f'{client.user.name} подключён к серверу!')
 
 #Пинг бота по slash-комманде
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))

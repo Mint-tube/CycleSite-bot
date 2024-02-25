@@ -1,11 +1,14 @@
 import requests
 from openai import OpenAI, UnprocessableEntityError
 from datetime import datetime
-import data.config as config
+from colorama import Fore, Back, Style, init
 from icecream import ic
 
-ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key=config.naga_api_key)
+import data.config as config
+from data.logging import debug, info, warning, error
 
+ai_client = OpenAI(base_url='https://api.naga.ac/v1', api_key=config.naga_api_key)
+init(autoreset=True)
 messages_history = []
 
 class api_status():
@@ -13,8 +16,9 @@ class api_status():
         response = requests.get('https://api.naga.ac/v1/models')
         status_code = response.status_code
         reason = response.reason
+        info(f'{Fore.GREEN}NagaAI API{Style.RESET_ALL}: {status_code} {reason}')
     except requests.exceptions.ConnectTimeout:
-        print('Не получен ответ от NagaAI, ИИ недоступен.')
+        warning(f'{Fore.GREEN}NagaAI API{Style.RESET_ALL}: Timeout')
         status_code = 503
         reason = 'Ответ не получен'
 
