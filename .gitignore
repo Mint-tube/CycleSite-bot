@@ -153,4 +153,5 @@ dmypy.json
 cython_debug/
 
 data/primary.db
+data/tickets_counter.txt
 test.py
