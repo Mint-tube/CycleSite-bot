@@ -21,7 +21,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.presences = True
-client = discord.Client(intents=intents)
+client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
 
 active_model = 'gpt-3.5-turbo'
@@ -130,7 +130,7 @@ async def on_ready():
     presence.start()
     lapse_of_warns.start()
     await tree.sync(guild=discord.Object(id=config.guild))
-    info(f'{client.user.name} подключён к серверу!')
+    info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
 #Пинг бота по slash-комманде
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
@@ -185,19 +185,27 @@ async def ticketing(intrct, title: str, description: str, type: str):
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.question())
             client.add_view(ticket_launcher.question())
+            await interaction.response.defer()
+            return
         case 'Баг':
             embed = discord.Embed(title=title, description=description, color=config.danger)
             await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
             client.add_view(ticket_launcher.bug())
+            await interaction.response.defer()
+            return
         case 'Жалоба':
             embed = discord.Embed(title=title, description=description, color=config.warning)
             await intrct.channel.send(embed=embed, view=ticket_launcher.report())
             client.add_view(ticket_launcher.report())
+            await interaction.response.defer()
+            return
         case 'Заявка':
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.application())
             client.add_view(ticket_launcher.application())
-    await intrct.response.send_message("Система тикетов была успешно (или почти) запущена", ephemeral=True)
+            await interaction.response.defer()
+            return
+    await intrct.response.send_message("Типы тикетов: Вопрос, Баг, Жалоба, Заявка", ephemeral=True)
 
 @tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
@@ -355,6 +363,7 @@ async def change_gpt_model(intrct, model: str):
 
 @client.event
 async def on_message_delete(message):
+
     if message.author == client.user:
         return
 
@@ -366,77 +375,73 @@ async def on_message_delete(message):
             attachments_temp.append(attachment.url)
         attachments = '\n'.join(attachments_temp)
 
-    embed = DiscordEmbed(title="🗑️ Сообщение Удалено", color=config.info)
+    embed = discord.Embed(title="🗑️ Сообщение Удалено", color=config.info)
     embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
-    embed.add_embed_field(name="Отправитель", value=str(message.author.mention), inline=False)
+    embed.add_field(name="Отправитель", value=str(message.author.mention), inline=False)
     if message.content != '':
-        embed.add_embed_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
+        embed.add_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
     elif attachments != '':
-        embed.add_embed_field(name="Вложения", value=str(attachments), inline=False)
-    embed.add_embed_field(name="Канал", value=str(message.channel.mention), inline=False)
+        embed.add_field(name="Вложения", value=str(attachments), inline=False)
+    embed.add_field(name="Канал", value=str(message.channel.mention), inline=False)
 
     if message.channel.category_id in config.very_secret_categories:
-        await send_embed_via_webhook(config.webhooks.private_logs, embed)
+        await client.get_guild(config.guild).get_channel(config.logs_channels.private).send(embed = embed)
     else:
-        await send_embed_via_webhook(config.webhooks.main_logs, embed)
+        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_message_edit(message_before, message_after):
+
     if str(message_before.content) != str(message_after.content) and str(message_after.content) != '':      
-        embed = DiscordEmbed(title='✏️ Сообщение Отредактировано', color=config.info)
+        embed = discord.Embed(title='✏️ Сообщение Отредактировано', color=config.info)
         embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
-        embed.add_embed_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
-        embed.add_embed_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
-        embed.add_embed_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
-        embed.add_embed_field(name="Канал", value=str(message_after.channel.mention), inline=False)
+        embed.add_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
+        embed.add_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
+        embed.add_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
+        embed.add_field(name="Канал", value=str(message_after.channel.mention), inline=False)
 
         if message_after.channel.category_id in config.very_secret_categories:
-            await send_embed_via_webhook(config.webhooks.private_logs, embed)
+            await client.get_guild(config.guild).get_channel(config.logs_channels.private).send(embed = embed)
         else:
-            await send_embed_via_webhook(config.webhooks.main_logs, embed)
+            await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_voice_state_update(member, state_before, state_after):
-    
+
     voice_channel_before = state_before.channel
     voice_channel_after = state_after.channel
-    
-    webhook = DiscordWebhook(
-        url = config.webhooks.voice_logs,
-        rate_limit_retry = True
-    )
 
     if voice_channel_before == voice_channel_after:
         return
     
     if voice_channel_before == None:
-        embed = DiscordEmbed(description=f'**{member.mention} присоединился к {voice_channel_after.mention}**', color=config.info)
+        embed = discord.Embed(description=f'**{member.mention} присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
 
     elif voice_channel_after == None:
-        embed = DiscordEmbed(description=f'**{member.mention} вышел из {voice_channel_before.mention}**', color=config.info)
+        embed = discord.Embed(description=f'**{member.mention} вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
 
     else:
-        embed = DiscordEmbed(description=f'**{member.mention} перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
+        embed = discord.Embed(description=f'**{member.mention} перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
     
-    await send_embed_via_webhook(config.webhooks.voice_logs, embed)
+    await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
 
 @client.event
 async def on_member_join(member):
-        embed = DiscordEmbed(description=f'**✔ {member.mention} присоединился к серверу**', color=config.success)
-        embed.set_author(name=member.name, icon_url=str(member.display_avatar))
-        embed.add_embed_field(name="Дата регистрации", value=f'<t:{unix_datetime(member.created_at)}:f>', inline=False)
+        embed = discord.Embed(description=f'**✔ {member.mention} присоединился к серверу**', color=config.success)
+        embed.add_field(name="Дата регистрации", value=f'<t:{unix_datetime(member.created_at)}:f>', inline=False)
+        embed.set_thumbnail(url = str(member.display_avatar))
         
-        await send_embed_via_webhook(config.webhooks.main_logs, embed)
+        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_member_remove(member):
-        embed = DiscordEmbed(description=f'**🔻 {member.mention} покинул сервер**', color=config.danger)
-        embed.set_author(name=member.name, icon_url=str(member.display_avatar))
-        embed.add_embed_field(name="Дата присоединения", value=f'<t:{unix_datetime(member.joined_at)}:f>', inline=False)
-        
-        await send_embed_via_webhook(config.webhooks.main_logs, embed)
+        embed = discord.Embed(description=f'**🔻 {member.mention} покинул сервер**', color=config.danger)
+        embed.add_field(name="Дата присоединения", value=f'<t:{unix_datetime(member.joined_at)}:f>', inline=False)
+        embed.set_thumbnail(url = str(member.display_avatar))
+
+        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
 
 client.run(config.token)
