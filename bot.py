@@ -127,8 +127,11 @@ async def setup_hook():
 #Запуск циклов и инфо о запуске
 @client.event
 async def on_ready():
-    presence.start()
-    lapse_of_warns.start()
+    try:
+        presence.start()
+        lapse_of_warns.start()
+    except RuntimeError:
+        warning('Задача запущенна и не завершена')
     await tree.sync(guild=discord.Object(id=config.guild))
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
@@ -180,32 +183,24 @@ async def on_member_update(before, after):
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
 async def ticketing(intrct, title: str, description: str, type: str):
-    match type:
-        case 'Вопрос':
+    match type.lower():
+        case 'вопрос':
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.question())
             client.add_view(ticket_launcher.question())
-            await interaction.response.defer()
-            return
-        case 'Баг':
+        case 'баг':
             embed = discord.Embed(title=title, description=description, color=config.danger)
             await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
             client.add_view(ticket_launcher.bug())
-            await interaction.response.defer()
-            return
-        case 'Жалоба':
+        case 'жалоба':
             embed = discord.Embed(title=title, description=description, color=config.warning)
             await intrct.channel.send(embed=embed, view=ticket_launcher.report())
             client.add_view(ticket_launcher.report())
-            await interaction.response.defer()
-            return
-        case 'Заявка':
+        case 'заявка':
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.application())
             client.add_view(ticket_launcher.application())
-            await interaction.response.defer()
-            return
-    await intrct.response.send_message("Типы тикетов: Вопрос, Баг, Жалоба, Заявка", ephemeral=True)
+    await interaction.response.defer()
 
 @tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
 async def on_sex(intrct):
