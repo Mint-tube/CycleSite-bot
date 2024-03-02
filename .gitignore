@@ -152,6 +152,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-data/primary.db
-data/tickets_counter.txt
 test.py
+data/warns.db
+
