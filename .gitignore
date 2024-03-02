@@ -153,5 +153,5 @@ dmypy.json
 cython_debug/
 
 test.py
-# data/warns.db
+data/warns.db
 
