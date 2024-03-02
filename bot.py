@@ -32,28 +32,17 @@ def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
     return embed
 
 #Пересоздание таблицы
-async def drop_table(table, original_intrct, intrct):
-    connection = sqlite3.connect('data/primary.db')
+async def drop_warns(original_intrct, intrct):
+    connection = sqlite3.connect('data/warns.db')
     cursor = connection.cursor()
-    match table:
-        case 'warns':
-            cursor.execute(f'DROP TABLE IF EXISTS {table}')
-            await original_intrct.delete_original_response()
-            embed = discord.Embed(title='Таблица варнов была успешно сброшена!', color=config.danger)
-            interaction_author(embed, intrct)
-            result = await intrct.response.send_message(embed=embed)
-            cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
-            cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none", 0)')
-    if not "embed" in locals():
-        await original_intrct.delete_original_response()
-        await intrct.response.send_message(f'Таблицы {table} не существует😨', ephemeral=True)
+    cursor.execute(f'DROP TABLE IF EXISTS {table}')
+    embed = discord.Embed(title='Таблица варнов была успешно сброшена!', color=config.danger)
+    cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
+    cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none", 0)')
+    await original_intrct.delete_original_response()
+    await intrct.response.send_message(embed=embed, ephemeral = True)
     connection.commit()
     connection.close()
-
-async def send_embed_via_webhook(url: str, embed: discord.Embed):
-    webhook = DiscordWebhook(url=url, rate_limit_retry=True)
-    webhook.add_embed(embed)
-    return webhook.execute()
 
 #Перевод даты в unix (секунды)
 def unix_datetime(source):
@@ -103,7 +92,7 @@ async def presence():
 #Удаление предупреждений
 @tasks.loop(hours = 1)
 async def lapse_of_warns():
-    connection = sqlite3.connect('data/primary.db')
+    connection = sqlite3.connect('data/warns.db')
     cursor = connection.cursor()
     cursor.execute('SELECT warn_id, lapse_time FROM warns')
     warns = cursor.fetchall()
@@ -242,7 +231,7 @@ async def drop(intrct, table: str):
     
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
 async def warn(intrct, user: discord.Member, reason: str):
-    connection = sqlite3.connect('data/primary.db')
+    connection = sqlite3.connect('data/warns.db')
     cursor = connection.cursor()
     if user.id == client.user.id:
         await intrct.response.send_message("Нет.", ephemeral=True)
@@ -298,7 +287,7 @@ async def warns_list(intrct, user: discord.Member = None):
     if user == client.user:
         await intrct.response.send_message("Ты не поверишь!", ephemeral=True)
         return
-    connection = sqlite3.connect('data/primary.db')
+    connection = sqlite3.connect('data/warns.db')
     cursor = connection.cursor()
     cursor.execute('SELECT warn_id, reason, message, lapse_time FROM warns WHERE name = ?', (user.mention,))
     warns = cursor.fetchall()
@@ -322,7 +311,7 @@ async def warns_list(intrct, user: discord.Member = None):
 @tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
 async def warn_del(intrct, warn_id: int):
     if warn_id > 0:
-        connection = sqlite3.connect('data/primary.db')
+        connection = sqlite3.connect('data/warns.db')
         cursor = connection.cursor()
         cursor.execute('DELETE FROM warns WHERE warn_id = ?', (warn_id,))
         embed = discord.Embed(title=f'Варн {warn_id} был успешно снят.', color=config.info)

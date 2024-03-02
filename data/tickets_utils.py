@@ -4,9 +4,9 @@ import data.config as config
 from time import mktime
 
 def tickets_counter_add():
-    with open('data/tickets_counter.txt', 'r') as file:
+    with open('data/counter.txt', 'r') as file:
         var = int(file.readline())
-    with open('data/tickets_counter.txt', 'w+') as file:
+    with open('data/counter.txt', 'w+') as file:
         file.write(str(var + 1))
     return var
 
