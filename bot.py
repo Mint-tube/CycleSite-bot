@@ -32,17 +32,23 @@ def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
     return embed
 
 #Пересоздание таблицы
-async def drop_warns(original_intrct, intrct):
-    connection = sqlite3.connect('data/warns.db')
-    cursor = connection.cursor()
-    cursor.execute(f'DROP TABLE IF EXISTS {table}')
-    embed = discord.Embed(title='Таблица варнов была успешно сброшена!', color=config.danger)
-    cursor.execute(f'CREATE TABLE {table} (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
-    cursor.execute(f'INSERT INTO {table} VALUES (0, "none", "none", "none", 0)')
-    await original_intrct.delete_original_response()
+async def drop_table_confirmed(table, original_intrct, intrct):
+    match table:
+        case 'warns':
+            connection = sqlite3.connect(f'data/warns.db')
+            cursor = connection.cursor()
+            cursor.execute(f'DROP TABLE IF EXISTS warns')
+            cursor.execute(f'CREATE TABLE warns (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
+            cursor.execute(f'INSERT INTO warns VALUES (0, "none", "none", "none", 0)')
+            embed = discord.Embed(title=f'Таблица варнов была успешно сброшена!', color=config.info)
+            interaction_author(embed, original_intrct)
+            connection.commit()
+            connection.close()
+
+    if not "embed" in locals():
+        embed = discord.Embed(title=f'Таблицы не существует, и существовать не должно 😠', color=config.danger)
     await intrct.response.send_message(embed=embed, ephemeral = True)
-    connection.commit()
-    connection.close()
+    await original_intrct.delete_original_response()
 
 #Перевод даты в unix (секунды)
 def unix_datetime(source):
@@ -74,9 +80,9 @@ class drop_confirm(discord.ui.View):
         self.intrct = intrct
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Жми! Жми! Жми!", style=discord.ButtonStyle.red, custom_id="close_ticket")
+    @discord.ui.button(label="Жми! Жми! Жми!", style=discord.ButtonStyle.red, custom_id="drop_confirm")
     async def drop(self, interaction, button):
-        await drop_table(self.table, self.intrct, interaction)
+        await drop_table_confirmed(self.table, self.intrct, interaction)
 
 
 #Изменение статуса
