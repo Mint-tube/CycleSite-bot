@@ -2,7 +2,7 @@ token = 'MTE4ODAyNDA1Nzg3OTMzNDk3NA.GnOFjw.a56IrzEUjsRxOIRCVMndz2ntIZIfycmq4eD1q
 guild = 1122085072577757275 #Сервер на котором работает бот
 naga_api_key = 'ng-IqawEKgW5IEZABcbQTns4nYCbCsaB'
 
-bot_engineers = [554281270260006914, 949708119334854658] #Банхаммеры, 05 и прочие диктаторы
+bot_engineers = [949708119334854658, 1070664383581143141] #Банхаммеры, 05 и прочие диктаторы
 admin_role = 1138744407135354970 #Роль Администратора
 secretary_role = 1194921855690219570 #Роль Администратора заявок
 nitro_booster_id = 1122867829662814279
