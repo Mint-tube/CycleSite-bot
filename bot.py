@@ -203,6 +203,15 @@ async def on_sex(intrct):
     embed = discord.Embed(title = choice(sex_variants),description='', color = config.info)
     await intrct.response.send_message(embed = embed)
 
+@tree.command(name='ретрансляция', description='Сказать от имени бота', guild=discord.Object(id=config.guild))
+async def say(intrct, message: str):
+    if intrct.user.id in config.bot_engineers:
+        await intrct.channel.send(message)
+        await intrct.response.defer()
+        await intrct.delete_original_response()
+    else:
+        await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
+
 @tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
 async def magic_ball(intrct):
     variants = ['Это точно.',
