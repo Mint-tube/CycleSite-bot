@@ -1,5 +1,6 @@
 token = 'MTE4ODAyNDA1Nzg3OTMzNDk3NA.GnOFjw.a56IrzEUjsRxOIRCVMndz2ntIZIfycmq4eD1q4' #Токен бота 
 guild = 1122085072577757275 #Сервер на котором работает бот
+client_id = 1188024057879334974
 naga_api_key = 'ng-IqawEKgW5IEZABcbQTns4nYCbCsaB'
 
 bot_engineers = [949708119334854658, 1070664383581143141] #Банхаммеры, 05 и прочие диктаторы
@@ -29,5 +30,4 @@ class logs_channels():
 
 #ugh yep
 bg_placeholder = 'https://avatars.mds.yandex.net/i?id=db66ef08ce22da10f91ffa6f04bd232b67b10155-8507274-images-thumbs&n=13'
-border_placeholder = 'https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg'
-defaul_xp_color = '#ffffff'
+border = 'https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg'

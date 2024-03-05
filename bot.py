@@ -15,6 +15,7 @@ from data.ai_utils import api_status, fetch_models, generate_response
 from data.tickets_utils import ticket_launcher, ticket_operator
 from data.logging import debug, info, warning, error
 from colorama import Fore, Back, Style, init
+import data.levels_utils.levelling as levelling
 
 #Инициализация бота
 intents = discord.Intents.default()
@@ -41,6 +42,17 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             cursor.execute(f'CREATE TABLE warns (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
             cursor.execute(f'INSERT INTO warns VALUES (0, "none", "none", "none", 0)')
             embed = discord.Embed(title=f'Таблица варнов была успешно сброшена!', color=config.info)
+            warning("Таблица варнов была сброшена")
+            interaction_author(embed, original_intrct)
+            connection.commit()
+            connection.close()
+        case 'levelling':
+            connection = sqlite3.connect('data\levelling.db')
+            cursor = connection.cursor()
+            cursor.execute(f'DROP TABLE IF EXISTS levelling')
+            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER, xp INTEGER, background TEXT)')
+            embed = discord.Embed(title=f'Таблица опыта была успешно сброшена!', color=config.info)
+            warning("Таблица опыта была сброшена")
             interaction_author(embed, original_intrct)
             connection.commit()
             connection.close()
@@ -130,6 +142,18 @@ async def on_ready():
     await tree.sync(guild=discord.Object(id=config.guild))
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
+    connection = sqlite3.connect('data/levelling.db')
+    cursor = connection.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS levelling(
+                    user_id INTEGER,
+                    level INTEGER,
+                    xp INTEGER,
+                    background TEXT,
+                    border TEXT
+                    )""")
+    connection.commit()
+    connection.close()
+
 #Пинг бота по slash-комманде
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
 async def on_ping(intrct):
@@ -164,6 +188,8 @@ async def on_message(message):
                 else:
                     await message.channel.send(response)
 
+    #ОПЫТ!!!!
+    levelling.xp_on_message(message)
 #Выдача и удаление роли Меценат за буст
 @client.event
 async def on_member_update(before, after):
