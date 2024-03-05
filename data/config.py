@@ -28,6 +28,7 @@ class logs_channels():
     voice = 1204502707667214387
     tickets = 1174675122976735353
 
-#ugh yep
+#levelling features
 bg_placeholder = 'https://avatars.mds.yandex.net/i?id=db66ef08ce22da10f91ffa6f04bd232b67b10155-8507274-images-thumbs&n=13'
 border = 'https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg'
+xp_per_lvl = 100

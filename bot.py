@@ -15,7 +15,7 @@ from data.ai_utils import api_status, fetch_models, generate_response
 from data.tickets_utils import ticket_launcher, ticket_operator
 from data.logging import debug, info, warning, error
 from colorama import Fore, Back, Style, init
-import data.levels_utils.levelling as levelling
+import data.levelling as levelling
 
 #Инициализация бота
 intents = discord.Intents.default()
@@ -36,7 +36,7 @@ def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
 async def drop_table_confirmed(table, original_intrct, intrct):
     match table:
         case 'warns':
-            connection = sqlite3.connect(f'data/warns.db')
+            connection = sqlite3.connect(f'data/databases/warns.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS warns')
             cursor.execute(f'CREATE TABLE warns (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
@@ -47,7 +47,7 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection.commit()
             connection.close()
         case 'levelling':
-            connection = sqlite3.connect('data\levelling.db')
+            connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS levelling')
             cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER, xp INTEGER, background TEXT)')
@@ -110,7 +110,7 @@ async def presence():
 #Удаление предупреждений
 @tasks.loop(hours = 1)
 async def lapse_of_warns():
-    connection = sqlite3.connect('data/warns.db')
+    connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
     cursor.execute('SELECT warn_id, lapse_time FROM warns')
     warns = cursor.fetchall()
@@ -142,18 +142,6 @@ async def on_ready():
     await tree.sync(guild=discord.Object(id=config.guild))
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
-    connection = sqlite3.connect('data/levelling.db')
-    cursor = connection.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS levelling(
-                    user_id INTEGER,
-                    level INTEGER,
-                    xp INTEGER,
-                    background TEXT,
-                    border TEXT
-                    )""")
-    connection.commit()
-    connection.close()
-
 #Пинг бота по slash-комманде
 @tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
 async def on_ping(intrct):
@@ -162,9 +150,11 @@ async def on_ping(intrct):
 
 @client.event 
 async def on_message(message):
-    #Случайные реакции
-    if message.author == client.user:
+    #Проверка на адекватность
+    if message.author == client.user or isinstance(message.channel, discord.DMChannel):
         return
+
+    #Случайные реакции
     if randint(0, 20) == 1:
         if message.channel.category_id not in config.very_serious_categories:
             await message.add_reaction(choice(message.guild.emojis))
@@ -188,8 +178,7 @@ async def on_message(message):
                 else:
                     await message.channel.send(response)
 
-    #ОПЫТ!!!!
-    levelling.xp_on_message(message)
+    await levelling.xp_on_message(message)
 #Выдача и удаление роли Меценат за буст
 @client.event
 async def on_member_update(before, after):
@@ -272,7 +261,7 @@ async def drop(intrct, table: str):
     
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
 async def warn(intrct, user: discord.Member, reason: str):
-    connection = sqlite3.connect('data/warns.db')
+    connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
     if user.id == client.user.id:
         await intrct.response.send_message("Нет.", ephemeral=True)
@@ -352,7 +341,7 @@ async def warns_list(intrct, user: discord.Member = None):
 @tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
 async def warn_del(intrct, warn_id: int):
     if warn_id > 0:
-        connection = sqlite3.connect('data/warns.db')
+        connection = sqlite3.connect('data/databases/warns.db')
         cursor = connection.cursor()
         cursor.execute('DELETE FROM warns WHERE warn_id = ?', (warn_id,))
         embed = discord.Embed(title=f'Варн {warn_id} был успешно снят.', color=config.info)
