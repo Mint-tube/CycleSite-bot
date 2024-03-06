@@ -67,7 +67,7 @@ async def add_xp(member: discord.Member, delta: int):
 
 async def xp_on_message(message: discord.Message):
     member = message.author
-    if member.bot == False and message.channel.category_id != 1133666070390132776:
+    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
         if await get_member(id = member.id) == None:
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
