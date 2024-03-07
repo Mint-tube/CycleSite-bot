@@ -435,15 +435,15 @@ async def on_voice_state_update(member, state_before, state_after):
         return
     
     if voice_channel_before == None:
-        embed = discord.Embed(description=f'**{member.mention} присоединился к {voice_channel_after.mention}**', color=config.info)
+        embed = discord.Embed(description=f'{member.mention} **присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
 
     elif voice_channel_after == None:
-        embed = discord.Embed(description=f'**{member.mention} вышел из {voice_channel_before.mention}**', color=config.info)
+        embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
 
     else:
-        embed = discord.Embed(description=f'**{member.mention} перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
+        embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
     
     await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
