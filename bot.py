@@ -1,6 +1,6 @@
 import os, discord, asyncio, sqlite3, sys, time, socket, requests, asyncio, warnings
 from discord import app_commands, Color, ui, utils
-from discord.ext import tasks
+from discord.ext import tasks, commands
 from icecream import ic
 from random import randint, choice
 from humanfriendly import parse_timespan, InvalidTimespan
@@ -179,6 +179,7 @@ async def on_message(message):
                     await message.channel.send(response)
 
     await levelling.xp_on_message(message)
+
 #Выдача и удаление роли Меценат за буст
 @client.event
 async def on_member_update(before, after):
@@ -218,12 +219,17 @@ async def on_sex(intrct):
     embed = discord.Embed(title = choice(sex_variants),description='', color = config.info)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name='ретрансляция', description='Сказать от имени бота', guild=discord.Object(id=config.guild))
-async def say(intrct, message: str):
+@tree.command(name='сказать', description='Эмбед от имени бота', guild=discord.Object(id=config.guild))
+@app_commands.describe(title='Заголовок', description='Описание', color='HEX цвет в формате 0x5c5eff')
+async def say(intrct, title: str = None, description: str = None, color: str = '0x5c5eff'):
     if intrct.user.id in config.bot_engineers:
-        await intrct.channel.send(message)
-        await intrct.response.defer()
-        await intrct.delete_original_response()
+        if description != None or title != None:
+            await intrct.response.defer()
+            embed = discord.Embed(title=title, description=description, color=int(color, 16))
+            await intrct.channel.send(embed=embed)
+            await intrct.delete_original_response()
+        else:
+            await intrct.response.send_message('Необходимо указать заголовок или описание.', ephemeral=True)
     else:
         await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
 
