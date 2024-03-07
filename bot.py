@@ -370,7 +370,7 @@ async def avatar(intrct, user: discord.Member = None):
         embed.set_image(url=intrct.user.display_avatar.url)
         await intrct.response.send_message(embed=embed)
 
-@tree.command(name='сменить_ии', description='Сменить ИИ', guild=discord.Object(id=config.guild))
+@tree.command(name='сменить_ии', description='Сменить модель ИИ', guild=discord.Object(id=config.guild))
 async def change_gpt_model(intrct, model: str):
     if model in fetch_models():
         global active_model
@@ -380,6 +380,18 @@ async def change_gpt_model(intrct, model: str):
     else:
         embed = discord.Embed(title='Список доступных моделей:', description='\n'.join(fetch_models()), color=config.info)
         await intrct.response.send_message(embed=embed, ephemeral=True)
+
+@tree.command(name='фон_профиля', description='Смените задний фон своего профиля', guild=discord.Object(id=config.guild))
+@app_commands.describe(url='Прямая ссылка на новый баннер')
+async def background(intrct, url: str):
+    await levelling.set_bg(member = intrct.user, url=url)
+    embed = discord.Embed(title=f"**Фон изменён**", description=url, color=config.info)
+    embed.set_image(url = url)
+    await intrct.response.send_message(embed = embed)
+
+# @tree.command(name='лидерборд', description='Топ игроков по опыту', guild=discord.Object(id=config.guild))
+# async def leaderboard(intrct):
+#     await levelling.leaderboard()
 
 @client.event
 async def on_message_delete(message):

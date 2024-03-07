@@ -3,19 +3,27 @@ import data.config as config
 from data.logging import debug, info, warning, error
 
 
-async def get_member(id: int):
-    connection = sqlite3.connect("data/databases/levelling.db")
+async def check_member(member: discord.Member):
+    connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
-    cursor.execute(f"SELECT * FROM levelling WHERE user_id = {id}")
-    member = cursor.fetchone()
-    return member
+
+    cursor.execute(f'SELECT * FROM levelling WHERE user_id = {member.id}')
+    if cursor.fetchone() == None:
+        cursor.execute('''INSERT INTO levelling (user_id, level, xp, background) 
+                    VALUES (?, 1, 0, ?)''', (member.id, config.bg_placeholder))
+
+    connection.commit()
+    connection.close()
 
 async def get_xp(member: discord.Member):
     connection = sqlite3.connect("data/databases/levelling.db")
     cursor = connection.cursor()
+
     cursor.execute("SELECT xp FROM levelling WHERE user_id = ?", (member.id,))
     xp = cursor.fetchone()
+
     cursor.close()
+
     if xp != None:
         return xp[0]
     else:
@@ -34,6 +42,7 @@ async def get_level(member: discord.Member):
 async def update_level(member: discord.Member):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
+
     cursor.execute(f'SELECT xp, level FROM levelling WHERE user_id = {member.id}')
     fetched = cursor.fetchone()
     xp = fetched[0]
@@ -44,36 +53,46 @@ async def update_level(member: discord.Member):
         level_current += 1
     if level_cached != level_current:
         cursor.execute(f'UPDATE levelling SET level = {level_current} WHERE user_id = {member.id}')
+
         connection.commit()
     connection.close()
 
-# async def add_level(member: discord.Member, delta: int):
-#     connection = sqlite3.connect('data/databases/levelling.db')
-#     cursor = connection.cursor()
-#     cursor.execute(f'UPDATE levelling SET level = level + {delta} WHERE user_id = {member.id}')
-#     connection.commit()
-#     connection.close()
+async def set_bg(member: discord.Member, url: str):
+    await check_member(member = member)
+
+    connection = sqlite3.connect('data/databases/levelling.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'UPDATE levelling set background = ? WHERE user_id = ?', (url, member.id))
+
+    connection.commit()
+    connection.close()
 
 async def add_xp(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
+
     cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
+
     connection.commit()
     connection.close()
+
     await update_level(member = member)
 
 
 
-
 async def xp_on_message(message: discord.Message):
-    member = message.author
-    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
-        if await get_member(id = member.id) == None:
-            connection = sqlite3.connect('data/databases/levelling.db')
-            cursor = connection.cursor()
-            cursor.execute('''INSERT INTO levelling (user_id, level, xp, background) 
-                            VALUES (?, 1, 0, ?)''', (message.author.id, config.bg_placeholder))
-            connection.commit()
-            connection.close()
-        else:
-            await add_xp(member = member, delta = random.randint(2, 10))
+    if message.author.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
+        await check_member(member = message.author)
+        await add_xp(member = message.author, delta = random.randint(2, 10))
+
+
+# async def leaderboard(intrct):
+#     connection = sqlite3.connect("data/databases/levelling.db")
+#     cursor = connection.cursor()
+
+#     cursor.execute("SELECT * FROM levelling ORDER BY xp DESC")
+#     dataframe = cursor.fetchall()
+
+#     connection.commit()
+#     connection.close()
