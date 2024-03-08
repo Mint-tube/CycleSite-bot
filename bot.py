@@ -26,6 +26,7 @@ client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
 
 active_model = 'gpt-3.5-turbo'
+in_voice = {}
 
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
@@ -389,9 +390,9 @@ async def background(intrct, url: str):
     embed.set_image(url = url)
     await intrct.response.send_message(embed = embed)
 
-# @tree.command(name='лидерборд', description='Топ игроков по опыту', guild=discord.Object(id=config.guild))
-# async def leaderboard(intrct):
-#     await levelling.leaderboard()
+@tree.command(name='профиль', description='Топ игроков по опыту', guild=discord.Object(id=config.guild))
+async def user_profile(intrct, user: discord.Member):
+    await levelling.user_profile(intrct, user = user)
 
 @client.event
 async def on_message_delete(message):
@@ -439,7 +440,7 @@ async def on_message_edit(message_before, message_after):
 
 @client.event
 async def on_voice_state_update(member, state_before, state_after):
-
+    #Логи
     voice_channel_before = state_before.channel
     voice_channel_after = state_after.channel
 
@@ -449,16 +450,25 @@ async def on_voice_state_update(member, state_before, state_after):
     if voice_channel_before == None:
         embed = discord.Embed(description=f'{member.mention} **присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
+        in_voice.update({member: datetime.now()})
 
     elif voice_channel_after == None:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
+        try:
+            timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
+            await levelling.xp_on_voice(member, timedelta)
+        except TypeError:
+            pass
 
     else:
         embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
     
     await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+
+    #Опыт за войс
+
 
 @client.event
 async def on_member_join(member):

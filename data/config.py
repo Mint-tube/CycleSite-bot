@@ -32,3 +32,4 @@ class logs_channels():
 bg_placeholder = 'https://avatars.mds.yandex.net/i?id=db66ef08ce22da10f91ffa6f04bd232b67b10155-8507274-images-thumbs&n=13'
 border = 'https://coolbackgrounds.io/images/backgrounds/black/pure-black-background-f82588d3.jpg'
 xp_per_lvl = 100
+voice_seconds_per_xp = 300
