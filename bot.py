@@ -51,7 +51,7 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS levelling')
-            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER, xp INTEGER, background TEXT)')
+            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 0, xp INTEGER DEFAULT 0, background TEXT, voice_time REAL DEFAULT 0)')
             embed = discord.Embed(title=f'Таблица опыта была успешно сброшена!', color=config.info)
             warning("Таблица опыта была сброшена")
             interaction_author(embed, original_intrct)
@@ -455,19 +455,14 @@ async def on_voice_state_update(member, state_before, state_after):
     elif voice_channel_after == None:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        try:
-            timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
-            await levelling.xp_on_voice(member, timedelta)
-        except TypeError:
-            pass
+        timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
+        await levelling.xp_on_voice(member, timedelta)
 
     else:
         embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
     
     await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
-
-    #Опыт за войс
 
 
 @client.event

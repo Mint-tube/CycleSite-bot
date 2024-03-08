@@ -10,8 +10,7 @@ async def check_member(member: discord.Member):
 
     cursor.execute(f'SELECT * FROM levelling WHERE user_id = {member.id}')
     if cursor.fetchone() == None:
-        cursor.execute('''INSERT INTO levelling (user_id, level, xp, background) 
-                    VALUES (?, 1, 0, ?)''', (member.id, config.bg_placeholder))
+        cursor.execute(f'INSERT INTO levelling (user_id) VALUES ({member.id})')
     connection.commit()
     connection.close()
 
@@ -97,7 +96,7 @@ async def xp_on_message(message: discord.Message):
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
     await check_member(member = member)
-    await add_xp(member = member, delta = int(timedelta/{config.voice_seconds_per_xp}))
+    await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
 
 # async def leaderboard(intrct):
