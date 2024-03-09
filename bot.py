@@ -51,7 +51,7 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS levelling')
-            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 0, xp INTEGER DEFAULT 0, background TEXT, voice_time REAL DEFAULT 0)')
+            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 0, xp INTEGER DEFAULT 0, voice_time REAL DEFAULT 0)')
             embed = discord.Embed(title=f'Таблица опыта была успешно сброшена!', color=config.info)
             warning("Таблица опыта была сброшена")
             interaction_author(embed, original_intrct)
@@ -194,33 +194,36 @@ async def on_member_update(before, after):
             await after.remove_roles(client.get_guild(int(config.guild)).get_role(1138436827909455925))
 
 @tree.command(name="тикет", description="Запускает систему тикетов в текущей категории!", guild=discord.Object(id=config.guild))
+@app_commands.rename(title='заголовок', description='описание', type='тип')
+@app_commands.describe(title='Заголовок', description='Описание', type='вопросы/баги/жалобы/заявки')
 async def ticketing(intrct, title: str, description: str, type: str):
     match type.lower():
-        case 'вопрос':
+        case 'вопросы':
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.question())
             client.add_view(ticket_launcher.question())
-        case 'баг':
+        case 'баги':
             embed = discord.Embed(title=title, description=description, color=config.danger)
             await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
             client.add_view(ticket_launcher.bug())
-        case 'жалоба':
+        case 'жалобы':
             embed = discord.Embed(title=title, description=description, color=config.warning)
             await intrct.channel.send(embed=embed, view=ticket_launcher.report())
             client.add_view(ticket_launcher.report())
-        case 'заявка':
+        case 'заявки':
             embed = discord.Embed(title=title, description=description, color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.application())
             client.add_view(ticket_launcher.application())
     await interaction.response.defer()
 
 @tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
-async def on_sex(intrct):
+async def sex(intrct):
     sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
     embed = discord.Embed(title = choice(sex_variants),description='', color = config.info)
     await intrct.response.send_message(embed = embed)
 
 @tree.command(name='сказать', description='Эмбед от имени бота', guild=discord.Object(id=config.guild))
+@app_commands.rename(title='заголовок', description='описание', color='цвет')
 @app_commands.describe(title='Заголовок', description='Описание', color='HEX цвет в формате 0x5c5eff')
 async def say(intrct, title: str = None, description: str = None, color: str = '0x5c5eff'):
     if intrct.user.id in config.bot_engineers:
@@ -259,6 +262,7 @@ async def magic_ball(intrct):
     await intrct.response.send_message(embed = embed)
 
 @tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
+@app_commands.rename(table='таблица')
 async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
         await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
@@ -267,6 +271,7 @@ async def drop(intrct, table: str):
     await intrct.response.send_message(embed = embed, view = drop_confirm(table, intrct), ephemeral = True, delete_after = 15)
     
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
+@app_commands.rename(user='пользователь', reason='причина')
 async def warn(intrct, user: discord.Member, reason: str):
     connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
@@ -284,7 +289,7 @@ async def warn(intrct, user: discord.Member, reason: str):
     case_id = cursor.fetchone()[0] + 1
     embed = discord.Embed(
             title=f"Выдано предупреждение!",
-            description=f'Пользователь {user.mention} получил предупреждение \nСлучай {case_id}',
+            description=f'Пользователь {user.mention} получил предупреждение \nID: {case_id}',
             color=config.info
         )
     interaction_author(embed, intrct)
@@ -318,6 +323,7 @@ async def warn(intrct, user: discord.Member, reason: str):
     connection.close()
 
 @tree.command(name="список_варнов", description="Помощь", guild=discord.Object(id=config.guild))
+@app_commands.rename(user='пользователь')
 async def warns_list(intrct, user: discord.Member = None):
     if not user:
         user = intrct.user
@@ -346,6 +352,7 @@ async def warns_list(intrct, user: discord.Member = None):
     connection.close()
 
 @tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
+@app_commands.rename(warn_id='id')
 async def warn_del(intrct, warn_id: int):
     if warn_id > 0:
         connection = sqlite3.connect('data/databases/warns.db')
@@ -361,6 +368,7 @@ async def warn_del(intrct, warn_id: int):
         await intrct.response.send_message(embed=embed, ephemeral=True)
     
 @tree.command(name='аватар', description='Аватар пользователя', guild=discord.Object(id=config.guild))
+@app_commands.rename(user='пользователь')
 async def avatar(intrct, user: discord.Member = None):
     if user:
         embed = discord.Embed(title=f'Аватар пользователя {user.display_name}:', color=config.info)
@@ -372,6 +380,7 @@ async def avatar(intrct, user: discord.Member = None):
         await intrct.response.send_message(embed=embed)
 
 @tree.command(name='сменить_ии', description='Сменить модель ИИ', guild=discord.Object(id=config.guild))
+@app_commands.rename(model='модель')
 async def change_gpt_model(intrct, model: str):
     if model in fetch_models():
         global active_model
@@ -382,17 +391,21 @@ async def change_gpt_model(intrct, model: str):
         embed = discord.Embed(title='Список доступных моделей:', description='\n'.join(fetch_models()), color=config.info)
         await intrct.response.send_message(embed=embed, ephemeral=True)
 
-@tree.command(name='фон_профиля', description='Смените задний фон своего профиля', guild=discord.Object(id=config.guild))
-@app_commands.describe(url='Прямая ссылка на новый баннер')
-async def background(intrct, url: str):
-    await levelling.set_bg(member = intrct.user, url=url)
-    embed = discord.Embed(title=f"**Фон изменён**", description=url, color=config.info)
-    embed.set_image(url = url)
-    await intrct.response.send_message(embed = embed)
+@tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
+@app_commands.rename(member='пользователь')
+async def user_profile(intrct, member: discord.Member = None):
+    await levelling.user_profile(intrct, member = member)
 
-@tree.command(name='профиль', description='Топ игроков по опыту', guild=discord.Object(id=config.guild))
-async def user_profile(intrct, user: discord.Member):
-    await levelling.user_profile(intrct, user = user)
+
+@tree.command(name='лидерборд', description='Топ по активности', guild=discord.Object(id=config.guild))
+@app_commands.rename(lb_type='тип', member='пользователь')
+@app_commands.choices(lb_type=[
+        app_commands.Choice(name="✨ Опыт дискорда", value="xp"),
+        app_commands.Choice(name="🎤 Время в войсе", value="voice_time"),
+        # app_commands.Choice(name="🎮 Опыт SCP", value="scp"),
+        ])
+async def leaderboard(intrct, lb_type: app_commands.Choice[str], member: discord.Member = None):
+    await levelling.leaderboard(intrct, lb_type = lb_type.value, member = member)
 
 @client.event
 async def on_message_delete(message):
@@ -455,8 +468,11 @@ async def on_voice_state_update(member, state_before, state_after):
     elif voice_channel_after == None:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
-        await levelling.xp_on_voice(member, timedelta)
+        try:
+            timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
+            await levelling.xp_on_voice(member, timedelta)
+        except TypeError as exception:
+            pass
 
     else:
         embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)

@@ -56,17 +56,6 @@ async def update_level(member: discord.Member):
         connection.commit()
     connection.close()
 
-async def set_bg(member: discord.Member, url: str):
-    await check_member(member = member)
-
-    connection = sqlite3.connect('data/databases/levelling.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f'UPDATE levelling set background = ? WHERE user_id = ?', (url, member.id))
-
-    connection.commit()
-    connection.close()
-
 async def add_xp(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
@@ -99,22 +88,24 @@ async def xp_on_voice(member: discord.Member, timedelta: int):
     await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
 
-# async def leaderboard(intrct):
-#     connection = sqlite3.connect("data/databases/levelling.db")
-#     cursor = connection.cursor()
+async def leaderboard(intrct, lb_type: str, member: discord.Member):
+    await intrct.response.send_message('Не работает(', ephemeral=True)
+    # connection = sqlite3.connect("data/databases/levelling.db")
+    # cursor = connection.cursor()
 
-#     cursor.execute("SELECT * FROM levelling ORDER BY xp DESC")
-#     dataframe = cursor.fetchall()
+    # cursor.execute(f"SELECT * FROM levelling ORDER BY {lb_type} DESC")
+    # dataframe = cursor.fetchall()
 
-#     connection.commit()
-#     connection.close()
+    # connection.commit()
+    # connection.close()
 
-# async def user_profile(intrct, member: discord.Member):
-#     connection = sqlite3.connect("data/databases/levelling.db")
-#     cursor = connection.cursor()
+async def user_profile(intrct, member: discord.Member):
+    await intrct.response.send_message('Не работает(', ephemeral=True)
+    # connection = sqlite3.connect("data/databases/levelling.db")
+    # cursor = connection.cursor()
 
-#     cursor.execute("SELECT * FROM levelling ORDER BY xp DESC")
-#     dataframe = cursor.fetchall()
+    # cursor.execute(f"SELECT * FROM levelling WHERE user_id = {member.id}")
+    # data = cursor.fetchall()
 
-#     connection.commit()
-#     connection.close()
+    # connection.commit()
+    # connection.close()
