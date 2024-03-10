@@ -41,7 +41,6 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS warns')
             cursor.execute(f'CREATE TABLE warns (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
-            cursor.execute(f'INSERT INTO warns VALUES (0, "none", "none", "none", 0)')
             embed = discord.Embed(title=f'Таблица варнов была успешно сброшена!', color=config.info)
             warning("Таблица варнов была сброшена")
             interaction_author(embed, original_intrct)
@@ -51,7 +50,7 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS levelling')
-            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 0, xp INTEGER DEFAULT 0, voice_time REAL DEFAULT 0)')
+            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 1, xp INTEGER DEFAULT 0, voice_time REAL DEFAULT 0, pizza INTEGER DEFAULT 0)')
             embed = discord.Embed(title=f'Таблица опыта была успешно сброшена!', color=config.info)
             warning("Таблица опыта была сброшена")
             interaction_author(embed, original_intrct)
@@ -115,7 +114,6 @@ async def lapse_of_warns():
     cursor = connection.cursor()
     cursor.execute('SELECT warn_id, lapse_time FROM warns')
     warns = cursor.fetchall()
-    warns.pop(0)
     for warn in warns:
         if unix_datetime(datetime.now()) >= warn[1]:
             cursor.execute(f'DELETE FROM warns WHERE warn_id = {warn[0]}')
@@ -286,7 +284,8 @@ async def warn(intrct, user: discord.Member, reason: str):
         return
     dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute('SELECT max(warn_id) FROM warns')
-    case_id = cursor.fetchone()[0] + 1
+    case_id = cursor.fetchone()[0]
+    case_id = 1 if case_id == None else case_id + 1
     embed = discord.Embed(
             title=f"Выдано предупреждение!",
             description=f'Пользователь {user.mention} получил предупреждение \nID: {case_id}',
@@ -330,7 +329,7 @@ async def warns_list(intrct, user: discord.Member = None):
     if user == client.user:
         await intrct.response.send_message("Ты не поверишь!", ephemeral=True)
         return
-    connection = sqlite3.connect('data/warns.db')
+    connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
     cursor.execute('SELECT warn_id, reason, message, lapse_time FROM warns WHERE name = ?', (user.mention,))
     warns = cursor.fetchall()
@@ -354,18 +353,15 @@ async def warns_list(intrct, user: discord.Member = None):
 @tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
 @app_commands.rename(warn_id='id')
 async def warn_del(intrct, warn_id: int):
-    if warn_id > 0:
-        connection = sqlite3.connect('data/databases/warns.db')
-        cursor = connection.cursor()
-        cursor.execute('DELETE FROM warns WHERE warn_id = ?', (warn_id,))
-        embed = discord.Embed(title=f'Варн {warn_id} был успешно снят.', color=config.info)
-        interaction_author(embed, intrct)
-        await intrct.response.send_message(embed=embed)
-        connection.commit()
-        connection.close()
-    else:
-        embed = discord.Embed(title='Не влезай, убьёт!', color=config.danger)
-        await intrct.response.send_message(embed=embed, ephemeral=True)
+    connection = sqlite3.connect('data/databases/warns.db')
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM warns WHERE warn_id = ?', (warn_id,))
+    connection.commit()
+    connection.close()
+
+    embed = discord.Embed(title=f'Варн {warn_id} был успешно снят.', color=config.info)
+    interaction_author(embed, intrct)
+    await intrct.response.send_message(embed=embed)
     
 @tree.command(name='аватар', description='Аватар пользователя', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
@@ -395,7 +391,6 @@ async def change_gpt_model(intrct, model: str):
 @app_commands.rename(member='пользователь')
 async def user_profile(intrct, member: discord.Member = None):
     await levelling.user_profile(intrct, member = member)
-
 
 @tree.command(name='лидерборд', description='Топ по активности', guild=discord.Object(id=config.guild))
 @app_commands.rename(lb_type='тип', member='пользователь')

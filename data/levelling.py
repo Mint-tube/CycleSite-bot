@@ -54,7 +54,13 @@ async def update_level(member: discord.Member):
         cursor.execute(f'UPDATE levelling SET level = {level_current} WHERE user_id = {member.id}')
 
         connection.commit()
-    connection.close()
+        connection.close()
+
+        return level_current
+    else:
+        connection.close()
+
+        return None
 
 async def add_xp(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
@@ -65,7 +71,7 @@ async def add_xp(member: discord.Member, delta: int):
     connection.commit()
     connection.close()
 
-    await update_level(member = member)
+    return await update_level(member = member)
 
 async def add_voice_time(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
@@ -79,9 +85,28 @@ async def add_voice_time(member: discord.Member, delta: int):
 #Функции для bot.py ------------
 
 async def xp_on_message(message: discord.Message):
-    if message.author.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
-        await check_member(member = message.author)
-        await add_xp(member = message.author, delta = random.randint(2, 10))
+    member = message.author
+    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
+        await check_member(member = member)
+        new_lvl = await add_xp(member = member, delta = random.randint(2, 10))
+        if new_lvl != None:
+            #ЕБУЧАЯ АЛГЕБРА😭😢
+            xp = await get_xp(member = member)
+            xp_used = 0
+            old_lvl = 1
+            while old_lvl < new_lvl:
+                xp_used += old_lvl * config.xp_per_lvl
+                old_lvl += 1
+            #Алгебра кончилась💚
+
+            file = discord.File("data/images/cyclesite.png")
+            embed = discord.Embed(title=f'**{member.display_name}** достиг уровня **{new_lvl}**!', color=config.info)
+            embed.set_author(name=member.name, icon_url=member.display_avatar)
+            embed.set_thumbnail(url='attachment://cyclesite.png')
+            embed.add_field(name='Всего опыта:', value = await get_xp(member=member))
+            embed.add_field(name='Прогресс до следующего уровня:', value = f'{xp - xp_used}/{new_lvl * config.xp_per_lvl}', inline = False)
+            await message.channel.send(file=file, embed=embed, reference=message)
+
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
     await check_member(member = member)
