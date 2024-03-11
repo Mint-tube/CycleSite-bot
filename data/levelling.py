@@ -31,8 +31,12 @@ async def get_xp(member: discord.Member):
 async def get_level(member: discord.Member):
     connection = sqlite3.connect("data/databases/levelling.db")
     cursor = connection.cursor()
+
     cursor.execute("SELECT level FROM levelling WHERE user_id = ?", (member.id,))
     level = cursor.fetchone()
+
+    connection.close()
+
     if level != None:
         return level[0]
     else:
@@ -63,6 +67,8 @@ async def update_level(member: discord.Member):
         return None
 
 async def add_xp(member: discord.Member, delta: int):
+    await check_member(member = member)
+
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
 
@@ -82,22 +88,31 @@ async def add_voice_time(member: discord.Member, delta: int):
     connection.commit()
     connection.close()
 
+async def get_rank(member: discord.Member):
+    connection = sqlite3.connect("data/databases/levelling.db")
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT RANK () OVER (ORDER BY xp DESC) rank FROM levelling WHERE user_id = {member.id}')
+    rank = cursor.fetchone()[0]
+
+    connection.close()
+    return rank
+
 #Функции для bot.py ------------
 
 async def xp_on_message(message: discord.Message):
     member = message.author
     if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
-        await check_member(member = member)
         new_lvl = await add_xp(member = member, delta = random.randint(2, 10))
+
+        #Эмбед при новом уровне
         if new_lvl != None:
-            #ЕБУЧАЯ АЛГЕБРА😭😢
             xp = await get_xp(member = member)
             xp_used = 0
             old_lvl = 1
             while old_lvl < new_lvl:
                 xp_used += old_lvl * config.xp_per_lvl
                 old_lvl += 1
-            #Алгебра кончилась💚
 
             file = discord.File("data/images/cyclesite.png")
             embed = discord.Embed(title=f'**{member.display_name}** достиг уровня **{new_lvl}**!', color=config.info)
@@ -109,7 +124,6 @@ async def xp_on_message(message: discord.Message):
 
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
-    await check_member(member = member)
     await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
 
@@ -125,12 +139,22 @@ async def leaderboard(intrct, lb_type: str, member: discord.Member):
     # connection.close()
 
 async def user_profile(intrct, member: discord.Member):
-    await intrct.response.send_message('Не работает(', ephemeral=True)
-    # connection = sqlite3.connect("data/databases/levelling.db")
-    # cursor = connection.cursor()
+    await check_member(member = member)
 
-    # cursor.execute(f"SELECT * FROM levelling WHERE user_id = {member.id}")
-    # data = cursor.fetchall()
+    connection = sqlite3.connect("data/databases/levelling.db")
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT * FROM (SELECT *, RANK () OVER (ORDER BY xp DESC) rank FROM levelling) WHERE user_id = {member.id}")
+    data = cursor.fetchall()[0]
+    connection.close()
 
-    # connection.commit()
-    # connection.close()
+    level, xp, voice_time, pizza = data[1], data[2], data[3], data[4]
+    rank = data[-1]
+
+    embed = discord.Embed(title=f'Статистика пользователя {member.display_name} \n———————————————————————————', color=config.info)
+    embed.set_author(name=intrct.user.display_name, icon_url=intrct.user.display_avatar)
+    embed.set_thumbnail(url=member.display_avatar)
+    embed.add_field(name='Место в топе:', value = rank)
+    embed.add_field(name='Уровень:', value = level)
+    embed.add_field(name='Всего опыта:', value = xp)
+    embed.add_field(name='Пиццы:', value = f'{pizza} 🍕')
+    await intrct.response.send_message(embed=embed,)

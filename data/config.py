@@ -32,5 +32,5 @@ class logs_channels():
     tickets = 1174675122976735353
 
 #Уровни
-xp_per_lvl = 100
+xp_per_lvl = 300
 voice_seconds_per_xp = 30

@@ -271,8 +271,7 @@ async def drop(intrct, table: str):
 @tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь', reason='причина')
 async def warn(intrct, user: discord.Member, reason: str):
-    connection = sqlite3.connect('data/databases/warns.db')
-    cursor = connection.cursor()
+    #Проверка на адекватность
     if user.id == client.user.id:
         await intrct.response.send_message("Нет.", ephemeral=True)
         return
@@ -282,13 +281,17 @@ async def warn(intrct, user: discord.Member, reason: str):
     if user == intrct.user:
         await intrct.response.send_message("Попроси кого-нибудь другого.", ephemeral=True)
         return
+
+    await levelling.add_xp(member = user, delta = -1500)
+    connection = sqlite3.connect('data/databases/warns.db')
+    cursor = connection.cursor()
     dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute('SELECT max(warn_id) FROM warns')
     case_id = cursor.fetchone()[0]
     case_id = 1 if case_id == None else case_id + 1
     embed = discord.Embed(
             title=f"Выдано предупреждение!",
-            description=f'Пользователь {user.mention} получил предупреждение \nID: {case_id}',
+            description=f'Пользователь {user.mention} получил предупреждение \nШтраф опыта: **-1500xp** \nID: **{case_id}**',
             color=config.info
         )
     interaction_author(embed, intrct)
@@ -390,7 +393,7 @@ async def change_gpt_model(intrct, model: str):
 @tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь')
 async def user_profile(intrct, member: discord.Member = None):
-    await levelling.user_profile(intrct, member = member)
+    await levelling.user_profile(intrct, member = member if not member == None else intrct.user)
 
 @tree.command(name='лидерборд', description='Топ по активности', guild=discord.Object(id=config.guild))
 @app_commands.rename(lb_type='тип', member='пользователь')
@@ -401,6 +404,13 @@ async def user_profile(intrct, member: discord.Member = None):
         ])
 async def leaderboard(intrct, lb_type: app_commands.Choice[str], member: discord.Member = None):
     await levelling.leaderboard(intrct, lb_type = lb_type.value, member = member)
+
+@tree.command(name='опыт', description='Снять/начислить опыт', guild=discord.Object(id=config.guild))
+@app_commands.rename(member='пользователь', delta='дельта')
+async def change_xp(intrct, member: discord.Member, delta: int):
+    await levelling.add_xp(member = member, delta = delta)
+    embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
+    await intrct.response.send_message(embed = embed)
 
 @client.event
 async def on_message_delete(message):
