@@ -40,7 +40,13 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection = sqlite3.connect(f'data/databases/warns.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS warns')
-            cursor.execute(f'CREATE TABLE warns (warn_id INTEGER PRIMARY KEY, name TEXT NOT NULL, reason TEXT, message TEXT, lapse_time INTEGER)')
+            cursor.execute(f'''CREATE TABLE warns (
+                            warn_id INTEGER PRIMARY KEY, 
+                            name TEXT NOT NULL, 
+                            reason TEXT, 
+                            message TEXT, 
+                            lapse_time INTEGER
+                            )''')
             embed = discord.Embed(title=f'Таблица варнов была успешно сброшена!', color=config.info)
             warning("Таблица варнов была сброшена")
             interaction_author(embed, original_intrct)
@@ -50,7 +56,14 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
             cursor.execute(f'DROP TABLE IF EXISTS levelling')
-            cursor.execute(f'CREATE TABLE levelling (user_id INTEGER, level INTEGER DEFAULT 1, xp INTEGER DEFAULT 0, voice_time REAL DEFAULT 0, pizza INTEGER DEFAULT 0)')
+            cursor.execute(f'''CREATE TABLE levelling (
+                            user_id INTEGER, 
+                            evel INTEGER DEFAULT 1, 
+                            xp INTEGER DEFAULT 0, 
+                            voice_time REAL DEFAULT 0, 
+                            pizza INTEGER DEFAULT 0, 
+                            user_name TEXT
+                            )''')
             embed = discord.Embed(title=f'Таблица опыта была успешно сброшена!', color=config.info)
             warning("Таблица опыта была сброшена")
             interaction_author(embed, original_intrct)
