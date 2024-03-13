@@ -120,6 +120,20 @@ async def lapse_of_warns():
     connection.commit()
     connection.close()
 
+@tasks.loop(hours = 12)
+async def update_usernames():
+    connection = sqlite3.connect('data/databases/levelling.db')
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT user_id FROM levelling")
+    ids = cursor.fetchall()
+
+    for row in ids:
+        member = await client.get_guild(config.guild).fetch_member(row[0])
+        cursor.execute(f"UPDATE levelling SET user_name = '{member.display_name}' WHERE user_id = {row[0]}")
+
+    connection.commit()
+    connection.close()
 
 #Подгрузка view с тикетами
 @client.event
@@ -136,8 +150,9 @@ async def on_ready():
     try:
         presence.start()
         lapse_of_warns.start()
-    except RuntimeError:
-        warning('Задача запущенна и не завершена')
+        update_usernames.start()
+    except RuntimeError as exc:
+        warning('Задача запущенна и не завершена! \n' + exc)
     await tree.sync(guild=discord.Object(id=config.guild))
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
@@ -396,14 +411,14 @@ async def user_profile(intrct, member: discord.Member = None):
     await levelling.user_profile(intrct, member = member if not member == None else intrct.user)
 
 @tree.command(name='лидерборд', description='Топ по активности', guild=discord.Object(id=config.guild))
-@app_commands.rename(lb_type='тип', member='пользователь')
+@app_commands.rename(lb_type='сортировать_по')
 @app_commands.choices(lb_type=[
-        app_commands.Choice(name="✨ Опыт дискорда", value="xp"),
-        app_commands.Choice(name="🎤 Время в войсе", value="voice_time"),
-        # app_commands.Choice(name="🎮 Опыт SCP", value="scp"),
+        app_commands.Choice(name="✨ Опыту дискорда", value="xp"),
+        app_commands.Choice(name="🎤 Времени в войсе", value="voice_time"),
+        # app_commands.Choice(name="🎮 Опыту SCP", value="scp"),
         ])
-async def leaderboard(intrct, lb_type: app_commands.Choice[str], member: discord.Member = None):
-    await levelling.leaderboard(intrct, lb_type = lb_type.value, member = member)
+async def leaderboard(intrct, lb_type: app_commands.Choice[str]):
+    await levelling.leaderboard(intrct, lb_type = lb_type)
 
 @tree.command(name='опыт', description='Снять/начислить опыт', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь', delta='дельта')

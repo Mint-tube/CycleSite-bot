@@ -1,6 +1,20 @@
-import os, sqlite3, discord, random
+import os, sqlite3, discord, random, asyncio, datetime
 import data.config as config
 from data.logging import debug, info, warning, error
+
+#О нет, view(
+class leaderboard(discord.ui.View):
+    def __init__(self, original_intrct, dataframe) -> None:
+        self.table = table
+        self.intrct = intrct
+        super().__init__(timeout=300)
+
+    @discord.ui.button(label="◀ Назад", style=discord.ButtonStyle.primary, custom_id="backward")
+    async def drop(self, interaction, button):
+        do_some_shit()
+    @discord.ui.button(label="Вперёд ▶", style=discord.ButtonStyle.primary, custom_id="forward")
+    async def drop(self, interaction, button):
+        do_some_shit()
 
 #Вспомогательные функции ------------
 
@@ -72,7 +86,11 @@ async def add_xp(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
+    try:
+        cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
+    except sqlite3.OperationalError:
+        asyncio.sleep(1)
+        cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
 
     connection.commit()
     connection.close()
@@ -122,21 +140,29 @@ async def xp_on_message(message: discord.Message):
             embed.add_field(name='Прогресс до следующего уровня:', value = f'{xp - xp_used}/{new_lvl * config.xp_per_lvl}', inline = False)
             await message.channel.send(file=file, embed=embed, reference=message)
 
-
 async def xp_on_voice(member: discord.Member, timedelta: int):
     await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
 
-async def leaderboard(intrct, lb_type: str, member: discord.Member):
-    await intrct.response.send_message('Не работает(', ephemeral=True)
-    # connection = sqlite3.connect("data/databases/levelling.db")
-    # cursor = connection.cursor()
+async def leaderboard(intrct, lb_type: str):
+    await intrct.response.defer()
 
-    # cursor.execute(f"SELECT * FROM levelling ORDER BY {lb_type} DESC")
-    # dataframe = cursor.fetchall()
+    connection = sqlite3.connect("data/databases/levelling.db")
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT * FROM levelling ORDER BY {lb_type.value} DESC")
+    dataframe = cursor.fetchall()
+    connection.close()
 
-    # connection.commit()
-    # connection.close()
+    embed = discord.Embed(title=f'Топ пользователей по {lb_type.name}', color=config.info)
+
+    for datatile in dataframe[:10]:
+        rank = dataframe.index(datatile)+1
+        rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
+        embed.add_field(name=f'#{rank} {datatile[5]} {rank_emoji}', 
+                        value=f'**{datatile[1]}** уровень | **{datatile[2]}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** пицц', 
+                        inline=False)
+
+    await intrct.edit_original_response(embed=embed)
 
 async def user_profile(intrct, member: discord.Member):
     await check_member(member = member)
@@ -147,14 +173,24 @@ async def user_profile(intrct, member: discord.Member):
     data = cursor.fetchall()[0]
     connection.close()
 
-    level, xp, voice_time, pizza = data[1], data[2], data[3], data[4]
+    lvl, xp, voice_time, pizza = data[1], data[2], data[3], data[4]
     rank = data[-1]
+    rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
+
+    xp_used = 0
+    calc_lvl = 1
+    while calc_lvl < lvl:
+        xp_used += calc_lvl * config.xp_per_lvl
+        calc_lvl += 1
 
     embed = discord.Embed(title=f'Статистика пользователя {member.display_name} \n———————————————————————————', color=config.info)
     embed.set_author(name=intrct.user.display_name, icon_url=intrct.user.display_avatar)
     embed.set_thumbnail(url=member.display_avatar)
-    embed.add_field(name='Место в топе:', value = rank)
-    embed.add_field(name='Уровень:', value = level)
-    embed.add_field(name='Всего опыта:', value = xp)
+    embed.add_field(name='Место в топе:', value = str(rank) + f' {rank_emoji}', inline=False)
+    embed.add_field(name='Уровень:', value = lvl)
+    embed.add_field(name='Всего опыта:', value = str(xp) + ' ✨')
+    embed.add_field(name='Прогресс до уровня:', value = f'{xp - xp_used}/{lvl * config.xp_per_lvl} 📈')
     embed.add_field(name='Пиццы:', value = f'{pizza} 🍕')
-    await intrct.response.send_message(embed=embed,)
+    embed.add_field(name='Время в войсе:', value = str(voice_time) + ' часов')
+    embed.add_field(name='', value = f'')
+    await intrct.response.send_message(embed=embed)

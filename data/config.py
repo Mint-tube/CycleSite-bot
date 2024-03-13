@@ -32,5 +32,6 @@ class logs_channels():
     tickets = 1174675122976735353
 
 #Уровни
-xp_per_lvl = 300
+xp_per_lvl = 500
 voice_seconds_per_xp = 30
+rank_emojis = {'1': '🏆', '2':'🎖', '3':'🎖', '4':'🎖', '5':'🎖'}
