@@ -159,7 +159,7 @@ async def leaderboard(intrct, lb_type: str):
         rank = dataframe.index(datatile)+1
         rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
         embed.add_field(name=f'#{rank} {datatile[5]} {rank_emoji}', 
-                        value=f'**{datatile[1]}** уровень | **{datatile[2]}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** пицц', 
+                        value=f'**{datatile[1]}** уровень | **{round(datatile[2], 2)}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** 🍕', 
                         inline=False)
 
     await intrct.edit_original_response(embed=embed)
