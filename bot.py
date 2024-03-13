@@ -405,6 +405,16 @@ async def change_gpt_model(intrct, model: str):
         embed = discord.Embed(title='Список доступных моделей:', description='\n'.join(fetch_models()), color=config.info)
         await intrct.response.send_message(embed=embed, ephemeral=True)
 
+@tree.command(name='бан', description='Унижение человека', guild=discord.Object(id=config.guild))
+@app_commands.rename(user='пользователь')
+async def ban(intrct, user: discord.Member):
+    if user.id in config.bot_engineers:
+        await intrct.response.send_message('Угандошился в край?', ephemeral=True)
+        return
+    await user.remove_roles(*user.roles, atomic=False)
+    await user.add_roles(intrct.guild.get_role(config.banned_role))
+    await intrct.response.send_message(f'**{user.mention} был опущен 😎**')
+
 @tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь')
 async def user_profile(intrct, member: discord.Member = None):
