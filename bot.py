@@ -499,8 +499,28 @@ async def ban(intrct, user: discord.Member):
 
     await intrct.response.send_message(f'**{user.mention} был забанен.**', ephemeral=True)
 
-    embed = discord.Embed(description=f'**📕 {user.mention} забанен нахуй XD**', color=config.danger)
+    embed = discord.Embed(description=f'**📕 {user.mention} забанен XD**', color=config.danger)
     await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
+
+@tree.command(name='пардон', description='Унижение человека, но обратно', guild=discord.Object(id=config.guild))
+@app_commands.rename(user='пользователь')
+async def unban(intrct, user: discord.Member):
+    connection = sqlite3.connect('data/databases/warns.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT * FROM bans WHERE id = {user.id}')
+
+    if cursor.fetchone():
+        await user.remove_roles(intrct.guild.get_role(config.banned_role))
+        cursor.execute(f'DELETE FROM bans WHERE id = {user.id}')
+        embed = discord.Embed(description=f'**📗 {user.mention} разбанен <3**', color=config.success)
+        await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
+        await intrct.response.send_message(f'**{user.mention} был разбанен.**', ephemeral=True)
+    else:
+        await intrct.response.send_message('Этот пользователь не забанен 😓.', ephemeral=True)
+
+    connection.commit()
+    connection.close()
 
 @tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь')
