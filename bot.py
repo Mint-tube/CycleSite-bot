@@ -36,6 +36,17 @@ def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
 #Пересоздание таблицы
 async def drop_table_confirmed(table, original_intrct, intrct):
     match table:
+        case 'bans':
+            connection = sqlite3.connect(f'data/databases/warns.db')
+            cursor = connection.cursor()
+            cursor.execute(f'DROP TABLE IF EXISTS bans')
+            cursor.execute(f'CREATE TABLE bans (id INTEGER PRIMARY KEY)')
+            embed = discord.Embed(title=f'Баны успешно сброшены!', color=config.info)
+            warning("Таблица банов была сброшена")
+            interaction_author(embed, original_intrct)
+            connection.commit()
+            connection.close()
+
         case 'warns':
             connection = sqlite3.connect(f'data/databases/warns.db')
             cursor = connection.cursor()
@@ -52,6 +63,7 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             interaction_author(embed, original_intrct)
             connection.commit()
             connection.close()
+            
         case 'levelling':
             connection = sqlite3.connect('data/databases/levelling.db')
             cursor = connection.cursor()
@@ -69,10 +81,9 @@ async def drop_table_confirmed(table, original_intrct, intrct):
             interaction_author(embed, original_intrct)
             connection.commit()
             connection.close()
-
     if not "embed" in locals():
         embed = discord.Embed(title=f'Таблицы не существует, и существовать не должно 😠', color=config.danger)
-    await intrct.response.send_message(embed=embed, ephemeral = True)
+    await intrct.response.send_message(embed=embed)
     await original_intrct.delete_original_response()
 
 #Перевод даты в unix (секунды)
@@ -98,6 +109,16 @@ async def mute(intrct, target, timespan):
     embed = discord.Embed(title=f'Пользователь был замьючен.', description=f'Он сможет снова говорить <t:{unix_datetime(datetime.now().astimezone() + timedelta(seconds=real_timespan))}:R>', color=config.warning)
     await intrct.channel.send(embed = embed)
 
+async def check_ban(member: discord.Member):
+    connection = sqlite3.connect('data/databases/warns.db')
+    cursor = connection.cursor()
+    cursor.execute(f'SELECT * FROM bans WHERE id = ?', (member.id,))
+    result = cursor.fetchone()
+    connection.close()
+    if result:
+        return True
+    else:
+        return False
 
 class drop_confirm(discord.ui.View):
     def __init__(self, table, intrct) -> None:
@@ -468,7 +489,18 @@ async def ban(intrct, user: discord.Member):
         return
     await user.remove_roles(*user.roles, atomic=False)
     await user.add_roles(intrct.guild.get_role(config.banned_role))
-    await intrct.response.send_message(f'**{user.mention} был опущен 😎**')
+
+    connection = sqlite3.connect('data/databases/warns.db')
+    cursor = connection.cursor()
+    cursor.execute(f'DELETE FROM bans WHERE id = {user.id}')
+    cursor.execute(f'INSERT INTO bans (id) VALUES ({user.id})')
+    connection.commit()
+    connection.close()
+
+    await intrct.response.send_message(f'**{user.mention} был забанен.**', ephemeral=True)
+
+    embed = discord.Embed(description=f'**📕 {user.mention} забанен нахуй XD**', color=config.danger)
+    await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
 
 @tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь')
@@ -573,6 +605,11 @@ async def on_member_join(member):
         embed.set_thumbnail(url = str(member.display_avatar))
         
         await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+
+        if await check_ban(member):
+            await member.add_roles(member.guild.get_role(config.banned_role))
+            embed = discord.Embed(title=f'**📕 {member.mention} забанен нахуй**', color=config.danger)
+            await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_member_remove(member):
