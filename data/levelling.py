@@ -150,7 +150,7 @@ async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
         rank = dataframe.index(datatile)+1
         rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
         embed.add_field(name=f'#{rank} {datatile[5]} {rank_emoji}', 
-                        value=f'**{datatile[1]}** уровень | **{round(datatile[2], 2)}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** 🍕', 
+                        value=f'**{datatile[1]}** уровень | **{round(datatile[2], 2)}** опыта | **{round(datatile[3], 2)}** часов в войсе | **{datatile[4]}** 🍕', 
                         inline=False)
     return embed
 #Функции для bot.py ------------
