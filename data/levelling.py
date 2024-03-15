@@ -3,18 +3,39 @@ import data.config as config
 from data.logging import debug, info, warning, error
 
 #О нет, view(
-class leaderboard(discord.ui.View):
-    def __init__(self, original_intrct, dataframe) -> None:
-        self.table = table
-        self.intrct = intrct
-        super().__init__(timeout=300)
+class leaderboard_view(discord.ui.View):
+    def __init__(self, original_intrct, dataframe, lb_type, page):
+        self.original_intrct = original_intrct
+        self.dataframe = dataframe
+        self.lb_type = lb_type
+        self.page = page
+        super().__init__(timeout=600)
+
 
     @discord.ui.button(label="◀ Назад", style=discord.ButtonStyle.primary, custom_id="backward")
-    async def drop(self, interaction, button):
-        do_some_shit()
+    async def backward(self, interaction, button):
+        if self.page == 1:
+            await interaction.response.send_message("Это начало рейтинга 😎", ephemeral=True)
+            return
+        
+        await interaction.response.defer()
+        self.page -= 1
+        embed = await dataframe_to_leaderboard(self.dataframe, self.lb_type, self.page)
+
+        await self.original_intrct.edit_original_response(embed=embed, view=self)
+
     @discord.ui.button(label="Вперёд ▶", style=discord.ButtonStyle.primary, custom_id="forward")
-    async def drop(self, interaction, button):
-        do_some_shit()
+    async def forward(self, interaction, button):
+        if len(self.dataframe)/10 <= self.page:
+            await interaction.response.send_message("Это конец рейтинга 😓", ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.page += 1
+        embed = await dataframe_to_leaderboard(self.dataframe, self.lb_type, self.page)
+
+        await self.original_intrct.edit_original_response(embed=embed, view=self)
+        
 
 #Вспомогательные функции ------------
 
@@ -116,6 +137,15 @@ async def get_rank(member: discord.Member):
     connection.close()
     return rank
 
+async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
+    embed = discord.Embed(title=f'Топ пользователей по {lb_type.name}', color=config.info)
+    for datatile in dataframe[page*10-10:page*10]:
+        rank = dataframe.index(datatile)+1
+        rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
+        embed.add_field(name=f'#{rank} {datatile[5]} {rank_emoji}', 
+                        value=f'**{datatile[1]}** уровень | **{round(datatile[2], 2)}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** 🍕', 
+                        inline=False)
+    return embed
 #Функции для bot.py ------------
 
 async def xp_on_message(message: discord.Message):
@@ -145,24 +175,13 @@ async def xp_on_voice(member: discord.Member, timedelta: int):
     await add_voice_time(member = member, delta = timedelta)
 
 async def leaderboard(intrct, lb_type: str):
-    await intrct.response.defer()
-
     connection = sqlite3.connect("data/databases/levelling.db")
     cursor = connection.cursor()
     cursor.execute(f"SELECT * FROM levelling ORDER BY {lb_type.value} DESC")
     dataframe = cursor.fetchall()
     connection.close()
-
-    embed = discord.Embed(title=f'Топ пользователей по {lb_type.name}', color=config.info)
-
-    for datatile in dataframe[:10]:
-        rank = dataframe.index(datatile)+1
-        rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
-        embed.add_field(name=f'#{rank} {datatile[5]} {rank_emoji}', 
-                        value=f'**{datatile[1]}** уровень | **{round(datatile[2], 2)}** опыта | **{datatile[3]}** часов в войсе | **{datatile[4]}** 🍕', 
-                        inline=False)
-
-    await intrct.edit_original_response(embed=embed)
+    await intrct.response.send_message(embed=await dataframe_to_leaderboard(dataframe=dataframe, lb_type=lb_type, page=1),
+                              view=leaderboard_view(original_intrct=intrct, dataframe=dataframe, lb_type=lb_type, page=1))
 
 async def user_profile(intrct, member: discord.Member):
     await check_member(member = member)

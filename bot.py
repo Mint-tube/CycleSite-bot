@@ -504,7 +504,7 @@ async def ban(intrct, user: discord.Member):
 
 @tree.command(name='пардон', description='Унижение человека, но обратно', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
-async def unban(intrct, user: discord.Member):
+async def pardon(intrct, user: discord.Member):
     connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
 
