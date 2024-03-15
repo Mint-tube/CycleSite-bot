@@ -1,6 +1,8 @@
 import os, sqlite3, discord, random, asyncio, datetime
+from math import ceil
+
 import data.config as config
-from data.logging import debug, info, warning, error
+from data.logging import *
 
 #О нет, view(
 class leaderboard_view(discord.ui.View):
@@ -35,6 +37,11 @@ class leaderboard_view(discord.ui.View):
         embed = await dataframe_to_leaderboard(self.dataframe, self.lb_type, self.page)
 
         await self.original_intrct.edit_original_response(embed=embed, view=self)
+
+    async def on_timeout(self):
+        self.clear_items()
+        self.add_item(discord.ui.Button(label="Лидерборд устарел", custom_id="stopped", disabled=True))
+        await self.original_intrct.edit_original_response(view=self)
         
 
 #Вспомогательные функции ------------
@@ -138,7 +145,7 @@ async def get_rank(member: discord.Member):
     return rank
 
 async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
-    embed = discord.Embed(title=f'Топ пользователей по {lb_type.name}', color=config.info)
+    embed = discord.Embed(title=f'Топ пользователей по  {lb_type.name} \nСтраница {page}/{ceil(len(dataframe)/10)}', color=config.info)
     for datatile in dataframe[page*10-10:page*10]:
         rank = dataframe.index(datatile)+1
         rank_emoji = config.rank_emojis[str(rank)] if rank <= 5 else ""
