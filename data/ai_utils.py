@@ -1,5 +1,5 @@
 import requests
-from openai import OpenAI, UnprocessableEntityError
+from openai import OpenAI, UnprocessableEntityError, InternalServerError
 from datetime import datetime
 from colorama import Fore, Back, Style, init
 from icecream import ic
@@ -72,9 +72,13 @@ def generate_response(prompt, model):
         )
         message = response.choices[0].message.content
 
-    except UnprocessableEntityError:
-        print("Error 422: UnprocessableEntityError")
+    except UnprocessableEntityError as ex: # 422
+        error("422: UnprocessableEntityError")
         return 422
+
+    except InternalServerError as ex: # 500/502
+        error("500/502: InternalServerError/BadGateway")
+        return 500
 
     messages_history.append({
             "role": "user",

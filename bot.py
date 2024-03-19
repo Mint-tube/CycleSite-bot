@@ -220,13 +220,18 @@ async def on_message(message):
             async with message.channel.typing():
                 response = generate_response(message.content, model=active_model)
                 if type(response) == int:
-                    await message.add_reaction("🚫")
+                    await message.clear_reactions()
+                    await message.add_reaction("⛔")
                     embed = discord.Embed(description=f'**Ошибка {response}**', color=config.danger)
-                    await message.channel.send(embed = embed, delete_after = 15)
+                    await message.channel.send(embed = embed, delete_after = 60)
                 else:
                     await message.channel.send(response)
 
-    await levelling.xp_on_message(message)
+    new_role = await levelling.xp_on_message(message)
+    if new_role:
+        roles_to_remove = [role for role in message.author.roles if role.id in config.levelling_roles]
+        await message.author.remove_roles(*roles_to_remove)
+        await message.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
 
 #Выдача и удаление роли Меценат за буст
 @client.event
@@ -607,8 +612,10 @@ async def on_voice_state_update(member, state_before, state_after):
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
         try:
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
-            await levelling.xp_on_voice(member, timedelta)
-        except TypeError as exception:
+            new_role = await levelling.xp_on_voice(member, timedelta)
+            if new_role:
+                await member.add_roles(client.get_guild(config.guild).get_role(new_role))
+        except TypeError:
             pass
 
     else:

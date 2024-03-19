@@ -117,13 +117,38 @@ async def add_xp(member: discord.Member, delta: int):
     try:
         cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
     except sqlite3.OperationalError:
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
         cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
 
     connection.commit()
     connection.close()
 
     return await update_level(member = member)
+
+async def update_role(lvl: int):
+    connection = sqlite3.connect('data/databases/roles.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT level, role_id FROM roles')
+    roles = cursor.fetchall()
+
+    for role in roles:
+        if role[0] <= lvl:
+            new_role = role[1]
+            break
+
+    connection.close()
+    return new_role
+
+async def get_roles():
+    connection = sqlite3.connect('data/databases/roles.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f'SELECT role_id FROM roles')
+    roles = cursor.fetchall()
+
+    connection.close()
+    return roles
 
 async def add_voice_time(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
@@ -176,10 +201,13 @@ async def xp_on_message(message: discord.Message):
             embed.add_field(name='Всего опыта:', value = await get_xp(member=member))
             embed.add_field(name='Прогресс до следующего уровня:', value = f'{xp - xp_used}/{new_lvl * config.xp_per_lvl}', inline = False)
             await message.channel.send(file=file, embed=embed, reference=message)
+            
+            return await update_role(lvl = new_lvl)
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
     await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
+    return await update_role(lvl = await get_level(member = member))
 
 async def leaderboard(intrct, lb_type: str):
     connection = sqlite3.connect("data/databases/levelling.db")
