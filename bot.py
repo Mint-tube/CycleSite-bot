@@ -614,7 +614,9 @@ async def on_voice_state_update(member, state_before, state_after):
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
             new_role = await levelling.xp_on_voice(member, timedelta)
             if new_role:
-                await member.add_roles(client.get_guild(config.guild).get_role(new_role))
+                    roles_to_remove = [role for role in message.author.roles if role.id in config.levelling_roles]
+                    await message.author.remove_roles(*roles_to_remove)
+                    await message.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
         except TypeError:
             pass
 
