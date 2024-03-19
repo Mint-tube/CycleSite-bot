@@ -154,7 +154,7 @@ async def lapse_of_warns():
     connection.commit()
     connection.close()
 
-@tasks.loop(hours = 12)
+@tasks.loop(hours = 24)
 async def update_usernames():
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
@@ -163,7 +163,7 @@ async def update_usernames():
     ids = cursor.fetchall()
 
     for row in ids:
-        member = await client.get_guild(config.guild).fetch_member(row[0])
+        member = await client.fetch_user(row[0])
         cursor.execute(f"UPDATE levelling SET user_name = '{member.display_name}' WHERE user_id = {row[0]}")
 
     connection.commit()

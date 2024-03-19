@@ -117,8 +117,7 @@ async def add_xp(member: discord.Member, delta: int):
     try:
         cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
     except sqlite3.OperationalError:
-        await asyncio.sleep(1)
-        cursor.execute(f'UPDATE levelling SET xp = xp + {delta} WHERE user_id = {member.id}')
+        error("in add_xp():    sqlite3.OperationalError: database is locked")
 
     connection.commit()
     connection.close()
@@ -131,14 +130,17 @@ async def update_role(lvl: int):
 
     cursor.execute(f'SELECT level, role_id FROM roles')
     roles = cursor.fetchall()
+    connection.close()
 
     for role in roles:
         if role[0] <= lvl:
             new_role = role[1]
             break
 
-    connection.close()
-    return new_role
+    if new_role:
+        return new_role
+    else:
+        return None
 
 async def get_roles():
     connection = sqlite3.connect('data/databases/roles.db')
@@ -183,8 +185,8 @@ async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
 async def xp_on_message(message: discord.Message):
     member = message.author
     if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
-        new_lvl = await add_xp(member = member, delta = random.randint(2, 10))
-
+        delta = ceil(len(message.content) * config.xp_per_char)
+        new_lvl = await add_xp(member = member, delta = delta if delta < config.max_xp_per_msg else config.max_xp_per_msg)
         #Эмбед при новом уровне
         if new_lvl != None:
             xp = await get_xp(member = member)
@@ -205,9 +207,9 @@ async def xp_on_message(message: discord.Message):
             return await update_role(lvl = new_lvl)
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
-    await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
+    new_lvl = await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
-    return await update_role(lvl = await get_level(member = member))
+    return await update_role(lvl = new_lvl)
 
 async def leaderboard(intrct, lb_type: str):
     connection = sqlite3.connect("data/databases/levelling.db")
