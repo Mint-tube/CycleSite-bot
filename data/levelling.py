@@ -207,7 +207,7 @@ async def xp_on_message(message: discord.Message):
             return await update_role(lvl = new_lvl)
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
-    new_lvl = await add_xp(member = member, delta = int(timedelta/config.voice_seconds_per_xp))
+    new_lvl = await add_xp(member = member, delta = int(timedelta/config.seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
     return await update_role(lvl = new_lvl)
 
