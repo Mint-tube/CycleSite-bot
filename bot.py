@@ -164,12 +164,12 @@ async def update_usernames():
 
     for row in ids:
         member = await client.fetch_user(row[0])
-        cursor.execute(f"UPDATE levelling SET user_name = '{member.display_name}' WHERE user_id = {row[0]}")
+        cursor.execute("UPDATE levelling SET user_name = ? WHERE user_id = ?", (member.display_name, member.id))
 
     connection.commit()
     connection.close()
 
-    debug('Обновлены имён в levelling.db')
+    debug('Обновлены имёна в levelling.db')
 
 #Подгрузка view с тикетами
 @client.event
