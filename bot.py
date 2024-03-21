@@ -13,7 +13,7 @@ import data.config as config
 from data.emojis import emojis
 from data.ai_utils import api_status, fetch_models, generate_response
 from data.tickets_utils import ticket_launcher, ticket_operator
-from data.logging import debug, info, warning, error
+from data.logging import *
 from colorama import Fore, Back, Style, init
 import data.levelling as levelling
 
@@ -547,7 +547,13 @@ async def leaderboard(intrct, lb_type: app_commands.Choice[str]):
 @tree.command(name='опыт', description='Снять/начислить опыт', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь', delta='дельта')
 async def change_xp(intrct, member: discord.Member, delta: int):
-    await levelling.add_xp(member = member, delta = delta)
+    new_lvl = await levelling.add_xp(member = member, delta = delta)
+    if new_lvl:
+        new_role = await levelling.update_role(lvl = new_lvl)
+        roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
+        await member.remove_roles(*roles_to_remove)
+        await member.add_roles(client.get_guild(config.guild).get_role(new_role)) if new_role else None
+    
     embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
     await intrct.response.send_message(embed = embed)
 
@@ -618,7 +624,7 @@ async def on_voice_state_update(member, state_before, state_after):
             if new_role:
                     roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
                     await member.remove_roles(*roles_to_remove)
-                    await member.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
+                    await member.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
         except TypeError:
             pass
 

@@ -1,6 +1,8 @@
 from colorama import Fore, Back, Style, init
 import datetime
 
+__all__ = ['debug', 'info', 'warning', 'error']
+
 init(autoreset=True)
 
 def datestr():

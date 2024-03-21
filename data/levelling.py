@@ -93,6 +93,9 @@ async def update_level(member: discord.Member):
     xp = fetched[0]
     level_cached = fetched[1]
     level_current = 1
+
+    if xp <= 0:
+        return -1
     while xp >= level_current * config.xp_per_lvl:
         xp -= level_current * config.xp_per_lvl
         level_current += 1
@@ -122,7 +125,7 @@ async def add_xp(member: discord.Member, delta: int):
     connection.commit()
     connection.close()
 
-    return await update_level(member = member)
+    return await update_level(member = member) 
 
 async def update_role(lvl: int):
     connection = sqlite3.connect('data/databases/roles.db')
@@ -132,25 +135,12 @@ async def update_role(lvl: int):
     roles = cursor.fetchall()
     connection.close()
 
-    for role in roles:
-        if role[0] <= lvl:
-            new_role = role[1]
-            break
-
-    if new_role:
-        return new_role
-    else:
+    if lvl == -1:
         return None
 
-async def get_roles():
-    connection = sqlite3.connect('data/databases/roles.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f'SELECT role_id FROM roles')
-    roles = cursor.fetchall()
-
-    connection.close()
-    return roles
+    for role in roles:
+        if role[0] <= lvl:
+            return role[1]
 
 async def add_voice_time(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')

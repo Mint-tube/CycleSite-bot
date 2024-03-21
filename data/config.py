@@ -34,7 +34,7 @@ class logs_channels():
 
 #Уровни
 xp_per_lvl = 500
-seconds_per_xp = 30
+seconds_per_xp = 0.1
 xp_per_char = 0.2
 max_xp_per_msg = 100
 rank_emojis = {'1': '🏆', '2':'🎖', '3':'🎖', '4':'🎖', '5':'🎖'}
