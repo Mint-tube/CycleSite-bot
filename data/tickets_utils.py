@@ -47,7 +47,10 @@ class confirm_closing(discord.ui.View):
         embed.add_field(name='Перейти к тикету:', value=interaction.channel.jump_url, inline=False)
         embed.add_field(name='Время закрытия:', value=f'<t:{unix_datetime(interaction.created_at)}>', inline=True)
         embed.add_field(name='Закрыл:', value=interaction.user.mention, inline=True)
-        await interaction.user.send(embed = embed)
+        try:
+            await interaction.user.send(embed = embed)
+        except discord.errors.Forbidden:
+            pass
         await interaction.guild.get_channel(config.logs_channels.tickets).send(embed = embed)
         await interaction.response.send_message(embed = embed)
         await interaction.channel.edit(archived = True, locked = True)

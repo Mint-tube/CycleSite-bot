@@ -169,6 +169,8 @@ async def update_usernames():
     connection.commit()
     connection.close()
 
+    debug('Обновлены имён в levelling.db')
+
 #Подгрузка view с тикетами
 @client.event
 async def setup_hook():
@@ -614,9 +616,9 @@ async def on_voice_state_update(member, state_before, state_after):
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
             new_role = await levelling.xp_on_voice(member, timedelta)
             if new_role:
-                    roles_to_remove = [role for role in message.author.roles if role.id in config.levelling_roles]
-                    await message.author.remove_roles(*roles_to_remove)
-                    await message.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
+                    roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
+                    await member.remove_roles(*roles_to_remove)
+                    await member.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
         except TypeError:
             pass
 
@@ -625,7 +627,6 @@ async def on_voice_state_update(member, state_before, state_after):
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
     
     await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
-
 
 @client.event
 async def on_member_join(member):
