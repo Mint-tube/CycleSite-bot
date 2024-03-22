@@ -312,12 +312,6 @@ async def ticketing(intrct, type: str):
     await intrct.response.defer()
     await intrct.delete_original_response()
 
-@tree.command(name="выебать", description="Для MAO", guild=discord.Object(id=config.guild))
-async def sex(intrct):
-    sex_variants = [f'О, да, {intrct.user.display_name}! Выеби меня полностью, {intrct.user.display_name} 💕','Боже мой, как сильно... 💘','Ещеее! Ещееееее! 😍',f'{intrct.user.display_name}, я люблю тебя!']
-    embed = discord.Embed(title = choice(sex_variants),description='', color = config.info)
-    await intrct.response.send_message(embed = embed)
-
 @tree.command(name='сказать', description='Эмбед от имени бота', guild=discord.Object(id=config.guild))
 @app_commands.rename(title='заголовок', description='описание', color='цвет')
 @app_commands.describe(title='Заголовок', description='Описание', color='HEX цвет в формате 0x5c5eff')
@@ -332,30 +326,6 @@ async def say(intrct, title: str = None, description: str = None, color: str = '
             await intrct.response.send_message('Необходимо указать заголовок или описание.', ephemeral=True)
     else:
         await intrct.response.send_message('У тебя нет прав.', ephemeral=True)
-
-@tree.command(name="8ball", description="Погадаем~", guild=discord.Object(id=config.guild))
-async def magic_ball(intrct):
-    variants = ['Это точно.',
-             'Без сомнения.',
-             'Да, безусловно.',
-             'Вы можете положиться на него.',
-             'На мой взгляд, да.',
-             'Вероятно.',
-             'Перспективы хорошие.',
-             'Да.',
-             'Знаки указывают на да.',
-             'Ответ неясен, попробуйте еще раз.',
-             'Спросите позже.',
-             'Лучше не говорить тебе сейчас.',
-             'Сейчас предсказать невозможно.',
-             'Сосредоточьтесь и спросите еще раз.',
-             'Не рассчитывай на это.',
-             'Мой ответ — нет.',
-             'Мои источники говорят нет.',
-             'Перспективы не очень хорошие.',
-             'Очень сомнительно.']
-    embed = discord.Embed(title = choice(variants), color = config.info)
-    await intrct.response.send_message(embed = embed)
 
 @tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
 @app_commands.rename(table='таблица')
@@ -606,33 +576,47 @@ async def on_voice_state_update(member, state_before, state_after):
     #Логи
     voice_channel_before = state_before.channel
     voice_channel_after = state_after.channel
-
-    if voice_channel_before == voice_channel_after:
-        return
     
     if voice_channel_before == None:
         embed = discord.Embed(description=f'{member.mention} **присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        in_voice.update({member: datetime.now()})
+        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
 
-    elif voice_channel_after == None:
+        if not state_after.self_mute: 
+            in_voice.update({member: datetime.now()})
+
+    elif voice_channel_after == None and voice_channel_before.id != 1132601091238924349:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        try:
+        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+
+        if in_voice.get(member) != None and not state_before.self_mute:
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
             new_role = await levelling.xp_on_voice(member, timedelta)
             if new_role:
                     roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
                     await member.remove_roles(*roles_to_remove)
                     await member.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
-        except TypeError:
-            pass
-
-    else:
+    
+    elif voice_channel_after != voice_channel_before:
         embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
+        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+        
+    elif state_after.self_mute and not state_before.self_mute and in_voice.get(member) != None:
+        timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
+        new_role = await levelling.xp_on_voice(member, timedelta)
+        if new_role:
+                roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
+                await member.remove_roles(*roles_to_remove)
+                await member.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
     
-    await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+    elif state_before.self_mute and not state_after.self_mute:
+        in_voice.update({member: datetime.now()})
+
+    debug(voice_channel_before, voice_channel_after)
+    debug(state_before.self_mute, state_after.self_mute)
+    debug(in_voice.get(member))
 
 @client.event
 async def on_member_join(member):

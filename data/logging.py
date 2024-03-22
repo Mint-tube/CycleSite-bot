@@ -8,18 +8,18 @@ init(autoreset=True)
 def datestr():
     return f'{Fore.BLACK}{Style.BRIGHT}{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {Style.RESET_ALL}'
 
-def debug(message):
-    message = str(message)
-    print(datestr() + f'{Style.BRIGHT}{Fore.CYAN}DEBUG    {Style.RESET_ALL}' + message)
+def debug(*content):
+    message = [str(x) for x in content]
+    print(datestr() + f'{Style.BRIGHT}{Fore.CYAN}DEBUG    {Style.RESET_ALL}' + ' '.join(message))
 
-def info(message):
-    message = str(message)
-    print(datestr() + f'{Style.BRIGHT}{Fore.BLUE}INFO     {Style.RESET_ALL}' + message)
+def info(*content):
+    message = [str(x) for x in content]
+    print(datestr() + f'{Style.BRIGHT}{Fore.BLUE}INFO     {Style.RESET_ALL}' + ' '.join(message))
 
-def warning(message):
-    message = str(message)
-    print(datestr() + f'{Style.BRIGHT}{Fore.YELLOW}WARNING  {Style.RESET_ALL}' + message)
+def warning(*content):
+    message = [str(x) for x in content]
+    print(datestr() + f'{Style.BRIGHT}{Fore.YELLOW}WARNING  {Style.RESET_ALL}' + ' '.join(message))
 
-def error(message):
-    message = str(message)
-    print(datestr() + f'{Style.BRIGHT}{Fore.RED}ERROR    {Style.RESET_ALL}' + message)
+def error(*content):
+    message = [str(x) for x in content]
+    print(datestr() + f'{Style.BRIGHT}{Fore.RED}ERROR    {Style.RESET_ALL}' + ' '.join(message))

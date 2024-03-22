@@ -146,7 +146,7 @@ async def add_voice_time(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'UPDATE levelling SET voice_time = voice_time + {round(delta/3600, 2)} WHERE user_id = {member.id}')
+    cursor.execute(f'UPDATE levelling SET voice_time = voice_time + {"{:.2f}".format(round(delta/3600, 2))} WHERE user_id = {member.id}')
 
     connection.commit()
     connection.close()
@@ -192,14 +192,21 @@ async def xp_on_message(message: discord.Message):
             embed.set_thumbnail(url='attachment://cyclesite.png')
             embed.add_field(name='Всего опыта:', value = await get_xp(member=member))
             embed.add_field(name='Прогресс до следующего уровня:', value = f'{xp - xp_used}/{new_lvl * config.xp_per_lvl}', inline = False)
-            await message.channel.send(file=file, embed=embed, reference=message)
+            try:
+                await message.channel.send(file=file, embed=embed, reference=message)
+            except discord.errors.HTTPException as ex:
+                if ex.status == 400:
+                    pass
+                else:
+                    raise
             
             return await update_role(lvl = new_lvl)
 
 async def xp_on_voice(member: discord.Member, timedelta: int):
     new_lvl = await add_xp(member = member, delta = int(timedelta/config.seconds_per_xp))
     await add_voice_time(member = member, delta = timedelta)
-    return await update_role(lvl = new_lvl)
+    if new_lvl:
+        await update_role(lvl = new_lvl)
 
 async def leaderboard(intrct, lb_type: str):
     connection = sqlite3.connect("data/databases/levelling.db")
