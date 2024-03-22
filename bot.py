@@ -183,6 +183,7 @@ async def setup_hook():
 #Запуск циклов и инфо о запуске
 @client.event
 async def on_ready():
+    global guild
     try:
         presence.start()
         lapse_of_warns.start()
@@ -190,6 +191,7 @@ async def on_ready():
     except RuntimeError as exc:
         warning('Задача запущенна и не завершена! \n' + exc)
     await tree.sync(guild=discord.Object(id=config.guild))
+    guild = client.get_guild(config.guild)
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
 #Пинг бота по slash-комманде
@@ -233,7 +235,7 @@ async def on_message(message):
     if new_role:
         roles_to_remove = [role for role in message.author.roles if role.id in config.levelling_roles]
         await message.author.remove_roles(*roles_to_remove)
-        await message.author.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
+        await message.author.add_roles(guild.get_role(int(new_role)))
 
 #Выдача и удаление роли Меценат за буст
 @client.event
@@ -460,12 +462,13 @@ async def change_gpt_model(intrct, model: str):
 
 @tree.command(name='бан', description='Унижение человека', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
-async def ban(intrct, user: discord.Member):
-    if user.id in config.bot_engineers:
-        await intrct.response.send_message('Угандошился в край?', ephemeral=True)
-        return
-    await user.remove_roles(*user.roles, atomic=False)
-    await user.add_roles(intrct.guild.get_role(config.banned_role))
+async def ban(intrct, user: discord.User):
+    if guild.get_member(user.id):
+        try:
+            await user.remove_roles(*user.roles, atomic=False)
+            await user.add_roles(intrct.guild.get_role(config.banned_role))
+        except discord.app_commands.errors.CommandInvokeError as ex:
+            await intrct.response.send_message(f'**Почему?**', ephemeral=True)
 
     connection = sqlite3.connect('data/databases/warns.db')
     cursor = connection.cursor()
@@ -474,7 +477,7 @@ async def ban(intrct, user: discord.Member):
     connection.commit()
     connection.close()
 
-    await intrct.response.send_message(f'**{user.mention} был забанен.**', ephemeral=True)
+    await intrct.response.send_message(f'**Пользователь был добавлен в чёрный список ✅**', ephemeral=True)
 
     embed = discord.Embed(description=f'**📕 {user.mention} забанен XD**', color=config.danger)
     await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
@@ -488,13 +491,14 @@ async def pardon(intrct, user: discord.Member):
     cursor.execute(f'SELECT * FROM bans WHERE id = {user.id}')
 
     if cursor.fetchone():
-        await user.remove_roles(intrct.guild.get_role(config.banned_role))
+        if guild.get_member(user.id): 
+            await user.remove_roles(intrct.guild.get_role(config.banned_role))
         cursor.execute(f'DELETE FROM bans WHERE id = {user.id}')
         embed = discord.Embed(description=f'**📗 {user.mention} разбанен <3**', color=config.success)
         await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
-        await intrct.response.send_message(f'**{user.mention} был разбанен.**', ephemeral=True)
+        await intrct.response.send_message(f'{user.mention} был разбанен.', ephemeral=True)
     else:
-        await intrct.response.send_message('Этот пользователь не забанен 😓.', ephemeral=True)
+        await intrct.response.send_message('Этот пользователь не забанен.', ephemeral=True)
 
     connection.commit()
     connection.close()
@@ -522,7 +526,7 @@ async def change_xp(intrct, member: discord.Member, delta: int):
         new_role = await levelling.update_role(lvl = new_lvl)
         roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
         await member.remove_roles(*roles_to_remove)
-        await member.add_roles(client.get_guild(config.guild).get_role(new_role)) if new_role else None
+        await member.add_roles(guild.get_role(new_role)) if new_role else None
     
     embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
     await intrct.response.send_message(embed = embed)
@@ -551,9 +555,9 @@ async def on_message_delete(message):
     embed.add_field(name="Канал", value=str(message.channel.mention), inline=False)
 
     if message.channel.category_id in config.very_secret_categories:
-        await client.get_guild(config.guild).get_channel(config.logs_channels.private).send(embed = embed)
+        await guild.get_channel(config.logs_channels.private).send(embed = embed)
     else:
-        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+        await guild.get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_message_edit(message_before, message_after):
@@ -567,9 +571,9 @@ async def on_message_edit(message_before, message_after):
         embed.add_field(name="Канал", value=str(message_after.channel.mention), inline=False)
 
         if message_after.channel.category_id in config.very_secret_categories:
-            await client.get_guild(config.guild).get_channel(config.logs_channels.private).send(embed = embed)
+            await guild.get_channel(config.logs_channels.private).send(embed = embed)
         else:
-            await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+            await guild.get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_voice_state_update(member, state_before, state_after):
@@ -580,7 +584,7 @@ async def on_voice_state_update(member, state_before, state_after):
     if voice_channel_before == None:
         embed = discord.Embed(description=f'{member.mention} **присоединился к {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+        await guild.get_channel(config.logs_channels.voice).send(embed = embed)
 
         if not state_after.self_mute: 
             in_voice.update({member: datetime.now()})
@@ -588,7 +592,7 @@ async def on_voice_state_update(member, state_before, state_after):
     elif voice_channel_after == None and voice_channel_before.id != 1132601091238924349:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+        await guild.get_channel(config.logs_channels.voice).send(embed = embed)
 
         if in_voice.get(member) != None and not state_before.self_mute:
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
@@ -596,12 +600,12 @@ async def on_voice_state_update(member, state_before, state_after):
             if new_role:
                     roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
                     await member.remove_roles(*roles_to_remove)
-                    await member.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
+                    await member.add_roles(guild.get_role(int(new_role)))
     
     elif voice_channel_after != voice_channel_before:
         embed = discord.Embed(description=f'{member.mention} **перешел из {voice_channel_before.mention} в {voice_channel_after.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
-        await client.get_guild(config.guild).get_channel(config.logs_channels.voice).send(embed = embed)
+        await guild.get_channel(config.logs_channels.voice).send(embed = embed)
         
     elif state_after.self_mute and not state_before.self_mute and in_voice.get(member) != None:
         timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
@@ -609,14 +613,10 @@ async def on_voice_state_update(member, state_before, state_after):
         if new_role:
                 roles_to_remove = [role for role in member.roles if role.id in config.levelling_roles]
                 await member.remove_roles(*roles_to_remove)
-                await member.add_roles(client.get_guild(config.guild).get_role(int(new_role)))
+                await member.add_roles(guild.get_role(int(new_role)))
     
     elif state_before.self_mute and not state_after.self_mute:
         in_voice.update({member: datetime.now()})
-
-    debug(voice_channel_before, voice_channel_after)
-    debug(state_before.self_mute, state_after.self_mute)
-    debug(in_voice.get(member))
 
 @client.event
 async def on_member_join(member):
@@ -624,12 +624,12 @@ async def on_member_join(member):
         embed.add_field(name="Дата регистрации", value=f'<t:{unix_datetime(member.created_at)}:f>', inline=False)
         embed.set_thumbnail(url = str(member.display_avatar))
         
-        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+        await guild.get_channel(config.logs_channels.main).send(embed = embed)
 
         if await check_ban(member):
             await member.add_roles(member.guild.get_role(config.banned_role))
             embed = discord.Embed(title=f'**📕 {member.mention} забанен нахуй**', color=config.danger)
-            await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+            await guild.get_channel(config.logs_channels.main).send(embed = embed)
 
 @client.event
 async def on_member_remove(member):
@@ -637,6 +637,6 @@ async def on_member_remove(member):
         embed.add_field(name="Дата присоединения", value=f'<t:{unix_datetime(member.joined_at)}:f>', inline=False)
         embed.set_thumbnail(url = str(member.display_avatar))
 
-        await client.get_guild(config.guild).get_channel(config.logs_channels.main).send(embed = embed)
+        await guild.get_channel(config.logs_channels.main).send(embed = embed)
 
 client.run(config.token)
