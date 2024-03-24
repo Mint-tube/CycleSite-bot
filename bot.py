@@ -513,6 +513,7 @@ async def user_profile(intrct, member: discord.Member = None):
 @app_commands.choices(lb_type=[
         app_commands.Choice(name="✨ Опыту дискорда", value="xp"),
         app_commands.Choice(name="🎤 Времени в войсе", value="voice_time"),
+        app_commands.Choice(name="🍕 Пицца", value="pizza"),
         # app_commands.Choice(name="🎮 Опыту SCP", value="scp"),
         ])
 async def leaderboard(intrct, lb_type: app_commands.Choice[str]):

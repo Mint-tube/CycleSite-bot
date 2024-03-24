@@ -94,8 +94,6 @@ async def update_level(member: discord.Member):
     level_cached = fetched[1]
     level_current = 1
 
-    if xp <= 0:
-        return -1
     while xp >= level_current * config.xp_per_lvl:
         xp -= level_current * config.xp_per_lvl
         level_current += 1
@@ -174,7 +172,7 @@ async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
 
 async def xp_on_message(message: discord.Message):
     member = message.author
-    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045]:
+    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045] and message.category_id not in [1132586162356244480, 1133666070390132776]:
         delta = ceil(len(message.content) * config.xp_per_char)
         new_lvl = await add_xp(member = member, delta = delta if delta < config.max_xp_per_msg else config.max_xp_per_msg)
         #Эмбед при новом уровне
