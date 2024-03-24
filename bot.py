@@ -535,7 +535,7 @@ async def change_xp(intrct, member: discord.Member, delta: int):
 @client.event
 async def on_message_delete(message):
 
-    if message.author == client.user:
+    if message.author.bot:
         return
 
     attachments = ''
