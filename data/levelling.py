@@ -242,6 +242,6 @@ async def user_profile(intrct, member: discord.Member):
     embed.add_field(name='Всего опыта:', value = str(xp) + ' ✨')
     embed.add_field(name='Прогресс до уровня:', value = f'{xp - xp_used}/{lvl * config.xp_per_lvl} 📈')
     embed.add_field(name='Пиццы:', value = f'{pizza} 🍕')
-    embed.add_field(name='Время в войсе:', value = str(voice_time) + ' часов')
+    embed.add_field(name='Время в войсе:', value = str(floor(voice_time*100)/100) + ' часов')
     embed.add_field(name='', value = f'')
     await intrct.response.send_message(embed=embed)
