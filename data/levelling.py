@@ -174,7 +174,7 @@ async def dataframe_to_leaderboard(dataframe: list, lb_type: str, page: int):
 
 async def xp_on_message(message: discord.Message):
     member = message.author
-    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045] and message.channel.category_id not in [1132586162356244480, 1133666070390132776]:
+    if member.bot == False and message.channel.id not in [1123192369630695475, 1122481071330689045] and message.channel.category_id not in [1132586162356244480, 1133666070390132776, 1195776029973819533]:
         delta = ceil(len(message.content) * config.xp_per_char)
         new_lvl = await add_xp(member = member, delta = delta if delta < config.max_xp_per_msg else config.max_xp_per_msg)
         #Эмбед при новом уровне
