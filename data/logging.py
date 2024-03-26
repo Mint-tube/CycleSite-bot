@@ -22,4 +22,4 @@ def warning(*content):
 
 def error(*content):
     message = [str(x) for x in content]
-    print(datestr() + f'{Style.BRIGHT}{Fore.RED}ERROR    {Style.RESET_ALL}' + ' '.join(message))
+    print(datestr() + f'{Fore.RED}ERROR    {Style.RESET_ALL}' + ' '.join(message))

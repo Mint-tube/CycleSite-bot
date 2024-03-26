@@ -144,8 +144,10 @@ async def add_voice_time(member: discord.Member, delta: int):
     connection = sqlite3.connect('data/databases/levelling.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'UPDATE levelling SET voice_time = voice_time + {"{:.2f}".format(round(delta/3600, 2))} WHERE user_id = {member.id}')
-
+    try:
+        cursor.execute(f'UPDATE levelling SET voice_time = voice_time + {"{:.2f}".format(round(delta/3600, 2))} WHERE user_id = {member.id}')
+    except sqlite3.OperationalError:
+        error("in add_voice_time():    sqlite3.OperationalError: database is locked")
     connection.commit()
     connection.close()
 
