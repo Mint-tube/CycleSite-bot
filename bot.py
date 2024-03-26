@@ -590,12 +590,12 @@ async def on_voice_state_update(member, state_before, state_after):
         if not state_after.self_mute: 
             in_voice.update({member: datetime.now()})
 
-    elif voice_channel_after == None and voice_channel_before.id != 1132601091238924349:
+    elif voice_channel_after == None:
         embed = discord.Embed(description=f'{member.mention} **вышел из {voice_channel_before.mention}**', color=config.info)
         embed.set_author(name=member.display_name, icon_url=str(member.display_avatar))
         await guild.get_channel(config.logs_channels.voice).send(embed = embed)
 
-        if in_voice.get(member) != None and not state_before.self_mute:
+        if in_voice.get(member) != None and not state_before.self_mute and voice_channel_before.id != 1132601091238924349:
             timedelta = (datetime.now() - in_voice.get(member)).total_seconds()
             new_role = await levelling.xp_on_voice(member, timedelta)
             if new_role:
