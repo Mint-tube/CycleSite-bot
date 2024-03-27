@@ -550,7 +550,7 @@ async def steam_sync(intrct, steam_id: str):
             embed = discord.Embed(title="❌ Steam уже привязан к чужому Discord", description=f"Вы можете обратиться к пользователю, если это ваш аккунт", color=config.danger)
             embed.add_field(name="Discord", value=f'<@{response[1]}>', inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
-    awaitintrct.response.send_message(embed = embed)
+    await intrct.response.send_message(embed = embed)
 
 #События
 
