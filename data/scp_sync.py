@@ -1,4 +1,5 @@
 from pymongo import MongoClient, timeout
+from data.logging import *
 
 __all__ = ["steam_sync", "update_role", "get_statistic"]
 
@@ -14,6 +15,9 @@ async def steam_sync(discord_id: int, steam_id: int):
     current_steam = syncroles.find_one({"_id": steam_id})
     current_discord = syncroles.find_one({"DiscordId": discord_id})
 
+    debug(current_discord)
+    debug(current_steam)
+
     #Коды ответа соответсвуют HTTP
     if not current_steam and not current_discord: 
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
@@ -26,7 +30,7 @@ async def steam_sync(discord_id: int, steam_id: int):
     elif current_steam['DiscordId'] != discord_id:
         #Стим уже привязан к другому дискорду -> Conflict
         return (409, current_steam['DiscordId'])
-    elif current_steam['DiscordId'] == discord_id and current_discord['_id'] == steam_id:
+    elif current_steam == current_discord:
         #Стим уже привязан к этому дискорд -> Not Modified
         return (304,)
     else:

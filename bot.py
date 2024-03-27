@@ -551,7 +551,7 @@ async def steam_sync(intrct, steam_id: str):
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
         case 409:
-            embed = discord.Embed(title="❌ Steam уже привязан к чужому Discord", description=f"Вы можете обратиться к пользователю, если это ваш аккунт", color=config.danger)
+            embed = discord.Embed(title="❌ Steam уже привязан к чужому Discord", description=f"Вы можете обратиться к пользователю, если это ваш аккаунт", color=config.danger)
             embed.add_field(name="Discord", value=f'<@{response[1]}>', inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
         case 500:
