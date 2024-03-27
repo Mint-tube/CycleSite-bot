@@ -16,6 +16,7 @@ from data.tickets_utils import ticket_launcher, ticket_operator
 from data.logging import *
 from colorama import Fore, Back, Style, init
 import data.levelling as levelling
+import data.scp_sync as scp_sync
 
 #Инициализация бота
 intents = discord.Intents.default()
@@ -27,6 +28,7 @@ tree = app_commands.CommandTree(client)
 
 active_model = 'gpt-3.5-turbo'
 in_voice = {}
+
 
 #Добавление автора к embed
 def interaction_author(embed: discord.Embed, interaction: discord.Interaction):
@@ -532,6 +534,12 @@ async def change_xp(intrct, member: discord.Member, delta: int):
     embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
     await intrct.response.send_message(embed = embed)
 
+@tree.command(name='steam', description='Синхронизация Steam с Discord', guild=discord.Object(id=config.guild))
+async def steam_sync(intrct, steam_id: int):
+    scp_sync.steam_sync(discord=intrct.user.id, steam=steam_id)
+
+#События
+
 @client.event
 async def on_message_delete(message):
 
@@ -550,7 +558,10 @@ async def on_message_delete(message):
     embed.set_author(name=str(message.author), icon_url=str(message.author.display_avatar))
     embed.add_field(name="Отправитель", value=str(message.author.mention), inline=False)
     if message.content != '':
-        embed.add_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
+        if len(message.content) > 1024:
+            embed.add_field(name="Сообщение", value=str(f"```{message.content[:1021]}...```" + attachments), inline=False)
+        else:
+            embed.add_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
     elif attachments != '':
         embed.add_field(name="Вложения", value=str(attachments), inline=False)
     embed.add_field(name="Канал", value=str(message.channel.mention), inline=False)
@@ -567,8 +578,14 @@ async def on_message_edit(message_before, message_after):
         embed = discord.Embed(title='✏️ Сообщение Отредактировано', color=config.info)
         embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
         embed.add_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
-        embed.add_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
-        embed.add_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
+        if len(message_before.content) > 1024:
+            embed.add_field(name="До", value=str(f"```{message_after.content[:1021]}...```"), inline=False)
+        else:
+            embed.add_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
+        if len(message_after.content) > 1024:
+            embed.add_field(name="После", value=str(f"```{message_after.content[:1021]}...```"), inline=False)
+        else:
+            embed.add_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
         embed.add_field(name="Канал", value=str(message_after.channel.mention), inline=False)
 
         if message_after.channel.category_id in config.very_secret_categories:

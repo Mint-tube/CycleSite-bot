@@ -155,3 +155,4 @@ cython_debug/
 test.py
 data/databases/warns.db
 data/databases/levelling.db
+form.txt
