@@ -20,7 +20,7 @@ async def steam_sync(discord_id: int, steam_id: int):
         #Ни стим, ни дискорд ещё не привязаны -> Created
         return (201,)
     elif not current_steam:
-        syncroles.update_one(filter={"_id": steam_id}, update={"DiscordId": discord_id})
+        syncroles.update_one(filter={"_id": steam_id}, update={"$set" : {"DiscordId": discord_id}})
         #Привязаный стим был изменён -> OK
         return (200,)
     elif current_steam['DiscordId'] != discord_id:
