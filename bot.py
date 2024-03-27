@@ -536,7 +536,7 @@ async def change_xp(intrct, member: discord.Member, delta: int):
 
 @tree.command(name='steam', description='Синхронизация Steam с Discord', guild=discord.Object(id=config.guild))
 async def steam_sync(intrct, steam_id: str):
-    response = await scp_sync.steam_sync(discord=intrct.user.id, steam=int(steam_id))
+    response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam=int(steam_id))
     match response[0]:
         case 201 | 200:
             embed = discord.Embed(title="✅ Steam привязан к Discord", color=config.success)
