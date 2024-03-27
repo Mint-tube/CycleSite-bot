@@ -19,7 +19,7 @@ async def steam_sync(discord_id: int, steam_id: int):
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
         #Ни стим, ни дискорд ещё не привязаны -> Created
         return (201,)
-    elif current_steam['DiscordId'] != None and current_steam['DiscordId'] != discord_id:
+    elif current_steam != None and current_discord['DiscordId'] != None and current_steam['DiscordId'] != discord_id:
         #Стим уже привязан к другому дискорду -> Conflict
         return (409, current_steam['DiscordId'])
     elif current_steam['DiscordId'] == discord_id and current_discord['_id'] == steam_id:
