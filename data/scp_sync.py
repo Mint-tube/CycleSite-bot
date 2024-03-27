@@ -27,5 +27,5 @@ async def steam_sync(discord_id: int, steam_id: int):
         return (304,)
     else:
         syncroles.update_one(filter={"_id": steam_id}, update={"DiscordId": discord_id})
-        #К дискорду был привязан другой стим -> OK
+        #Привязаный стим был изменён -> OK
         return (200,)
