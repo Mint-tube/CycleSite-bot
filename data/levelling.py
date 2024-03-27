@@ -3,6 +3,7 @@ from math import ceil
 
 import data.config as config
 from data.logging import *
+from data.scp_sync import get_statistic
 
 #О нет, view(
 class leaderboard_view(discord.ui.View):
@@ -236,6 +237,8 @@ async def user_profile(intrct, member: discord.Member):
         xp_used += calc_lvl * config.xp_per_lvl
         calc_lvl += 1
 
+    scp_stats = await get_statistic(type = 'discord', id = member.id)
+
     embed = discord.Embed(title=f'Статистика пользователя {member.display_name} \n———————————————————————————', color=config.info)
     embed.set_author(name=intrct.user.display_name, icon_url=intrct.user.display_avatar)
     embed.set_thumbnail(url=member.display_avatar)
@@ -246,4 +249,5 @@ async def user_profile(intrct, member: discord.Member):
     embed.add_field(name='Пиццы:', value = f'{pizza} 🍕')
     embed.add_field(name='Время в войсе:', value = str(round(voice_time, 2)) + ' часов')
     embed.add_field(name='', value = f'')
+    embed.add_field(name='————————————————————————————————————')
     await intrct.response.send_message(embed=embed)

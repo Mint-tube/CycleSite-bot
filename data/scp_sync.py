@@ -1,6 +1,6 @@
 from pymongo import MongoClient, timeout
 
-__all__ = ["steam_sync", "update_role", "statistic"]
+__all__ = ["steam_sync", "update_role", "get_statistic"]
 
 mongodb_client = MongoClient("mongodb://localhost:27017")
 players = mongodb_client.players
@@ -33,3 +33,13 @@ async def steam_sync(discord_id: int, steam_id: int):
         #Пиздец -> Internal Server Error
         return (500,)
 
+async def update_role(discord_id: int, discord_role_id: int):
+    return
+
+async def get_statistic(type: str, id: int):
+    match type:
+        case "steam":
+            steam_id = id
+        case "discord":
+            steam_id = syncroles.find_one(filter={"DiscordId": id})["_id"]
+    return statistic.find_one(filter={"_id": steam_id})
