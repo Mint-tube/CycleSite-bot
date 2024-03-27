@@ -30,5 +30,6 @@ async def steam_sync(discord_id: int, steam_id: int):
         #Стим уже привязан к этому дискорд -> Not Modified
         return (304,)
     else:
-        #пиздец
+        #Пиздец -> Internal Server Error
         return (500,)
+

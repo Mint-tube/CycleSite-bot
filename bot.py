@@ -538,8 +538,12 @@ async def change_xp(intrct, member: discord.Member, delta: int):
 async def steam_sync(intrct, steam_id: str):
     response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam_id=int(steam_id))
     match response[0]:
-        case 201 | 200:
+        case 201:
             embed = discord.Embed(title="✅ Steam привязан к Discord", color=config.success)
+            embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
+            embed.add_field(name="Steam", value=steam_id, inline=True)
+        case 200:
+            embed = discord.Embed(title="✅ Привязанный Steam был изменён", color=config.success)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
         case 304:
