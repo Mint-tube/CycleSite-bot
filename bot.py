@@ -551,7 +551,7 @@ async def steam_sync(intrct, steam_id: str):
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value="Не привязан", inline=True)
         case 304:
-            embed = discord.Embed(title="Steam уже привязан к этому Discord ☑", color=config.info)
+            embed = discord.Embed(title="Steam уже привязан к этому Discord 🆗", color=config.info)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
         case 409:
@@ -565,7 +565,7 @@ async def steam_sync(intrct, steam_id: str):
 @tree.command(name='steam_forced', description='Насильно привязать Steam к аккаунту Discord', guild=discord.Object(id=config.guild))
 async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
     await scp_sync.steam_sync_forced(discord_id=int(discord_id), steam_id=int(steam_id))
-    await intrct.response.send_message(embed = discord.Embed(title="Аккаунты синхронизированы успешно☑", color=config.info))
+    await intrct.response.send_message(embed = discord.Embed(title="Аккаунты синхронизированы успешно 🌐", color=config.info))
 
 
 #События
