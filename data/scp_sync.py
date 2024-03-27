@@ -15,6 +15,11 @@ async def update_role(discord_id: int, discord_role_id: int):
     return
 
 async def steam_sync(discord_id: int, steam_id: int):
+    if steam_id == 0:
+        syncroles.delete_one(filter={"DiscordId": discord_id})
+        #Соединение разорвано -> No Content
+        return (204,)
+
     current_steam = syncroles.find_one({"_id": steam_id})
     current_discord = syncroles.find_one({"DiscordId": discord_id})
 
