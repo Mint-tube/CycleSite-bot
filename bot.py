@@ -534,7 +534,7 @@ async def change_xp(intrct, member: discord.Member, delta: int):
     embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name='steam', description='Синхронизация Steam с Discord', guild=discord.Object(id=config.guild))
+@tree.command(name='steam', description='Синхронизация Steam с Discord (0 для десинхронизации)', guild=discord.Object(id=config.guild))
 async def steam_sync(intrct, steam_id: str):
     response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam_id=int(steam_id))
     match response[0]:
@@ -551,7 +551,7 @@ async def steam_sync(intrct, steam_id: str):
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value="Не привязан", inline=True)
         case 304:
-            embed = discord.Embed(title="Steam уже привязан к этому Discord ✅", color=config.info)
+            embed = discord.Embed(title="Steam уже привязан к этому Discord ☑", color=config.info)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value=steam_id, inline=True)
         case 409:
@@ -561,6 +561,11 @@ async def steam_sync(intrct, steam_id: str):
         case 500:
             embed = discord.Embed(title="⚠ Произошла ошибка", color=config.warning)
     await intrct.response.send_message(embed = embed)
+
+@tree.command(name='steam_forced', description='Насильно привязать Steam к аккаунту Discord', guild=discord.Object(id=config.guild))
+async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
+    scp_sync.steam_sync_forced(discord_id=int(discord_id), steam_id=int(steam_id))
+
 
 #События
 

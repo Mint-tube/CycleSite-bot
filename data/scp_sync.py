@@ -6,7 +6,7 @@ __all__ = ["steam_sync", "update_role", "get_statistic"]
 mongodb_client = MongoClient("mongodb://localhost:27017")
 players = mongodb_client.players
 
-syncroles = players.syncroles 
+main = players.main
 syncroles = players.syncroles 
 statistic = players.statistic
 
@@ -42,6 +42,11 @@ async def steam_sync(discord_id: int, steam_id: int):
     else:
         #Пиздец -> Internal Server Error
         return (500,)
+
+async def steam_sync_forced(discord_id: int, steam_id: int):
+    syncroles.delete_one(filter={"_id": steam_id})
+    syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
+    return None
 
 async def get_statistic(type: str, id: int):
     match type:
