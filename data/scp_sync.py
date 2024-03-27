@@ -16,7 +16,7 @@ async def steam_sync(discord_id: int, steam_id: int):
 
     #Коды ответа соответсвуют HTTP
     if current_steam == None and current_discord == None: 
-        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord, "RoleId": None, 'Exception': False})
+        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
         #Ни стим, ни дискорд ещё не привязаны -> Created
         return (201,)
     elif current_steam['DiscordId'] != None and current_steam['DiscordId'] != discord_id:
