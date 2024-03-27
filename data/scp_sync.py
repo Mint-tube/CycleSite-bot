@@ -11,12 +11,12 @@ syncroles = players.syncroles
 statistic = players.statistic
 
 
+async def update_role(discord_id: int, discord_role_id: int):
+    return
+
 async def steam_sync(discord_id: int, steam_id: int):
     current_steam = syncroles.find_one({"_id": steam_id})
     current_discord = syncroles.find_one({"DiscordId": discord_id})
-
-    debug(current_discord)
-    debug(current_steam)
 
     #Коды ответа соответсвуют HTTP
     if not current_steam and not current_discord: 
@@ -24,7 +24,8 @@ async def steam_sync(discord_id: int, steam_id: int):
         #Ни стим, ни дискорд ещё не привязаны -> Created
         return (201,)
     elif not current_steam:
-        syncroles.update_one(filter={"DiscordId": discord_id}, update={"$set" : {"_id": steam_id}})
+        syncroles.delete_one(filter={"DiscordId": discord_id})
+        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
         #Привязаный стим был изменён -> OK
         return (200,)
     elif current_steam['DiscordId'] != discord_id:
@@ -36,9 +37,6 @@ async def steam_sync(discord_id: int, steam_id: int):
     else:
         #Пиздец -> Internal Server Error
         return (500,)
-
-async def update_role(discord_id: int, discord_role_id: int):
-    return
 
 async def get_statistic(type: str, id: int):
     match type:
