@@ -559,7 +559,7 @@ async def on_message_delete(message):
     embed.add_field(name="Отправитель", value=str(message.author.mention), inline=False)
     if message.content != '':
         if len(message.content) > 1024:
-            embed.add_field(name="Сообщение", value=str(f"```{message.content[:1021]}...```" + attachments), inline=False)
+            embed.add_field(name="Сообщение", value=str(f"```{message.content[:1010]}...```" + attachments), inline=False)
         else:
             embed.add_field(name="Сообщение", value=str(f"```{message.content}```" + attachments), inline=False)
     elif attachments != '':
@@ -579,11 +579,11 @@ async def on_message_edit(message_before, message_after):
         embed.set_author(name=str(message_before.author), icon_url=str(message_before.author.display_avatar))
         embed.add_field(name="Отправитель", value=str(message_before.author.mention), inline=False)
         if len(message_before.content) > 1024:
-            embed.add_field(name="До", value=str(f"```{message_after.content[:1021]}...```"), inline=False)
+            embed.add_field(name="До", value=str(f"```{message_after.content[:1010]}...```"), inline=False)
         else:
             embed.add_field(name="До", value=str(f"```{message_before.content}```"), inline=False)
         if len(message_after.content) > 1024:
-            embed.add_field(name="После", value=str(f"```{message_after.content[:1021]}...```"), inline=False)
+            embed.add_field(name="После", value=str(f"```{message_after.content[:1010]}...```"), inline=False)
         else:
             embed.add_field(name="После", value=str(f"```{message_after.content}```"), inline=False)
         embed.add_field(name="Канал", value=str(message_after.channel.mention), inline=False)
