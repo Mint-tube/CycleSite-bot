@@ -1,9 +1,10 @@
-﻿aiohttp==3.8.6
+aiohttp==3.8.6
 aiosignal==1.3.1
 annotated-types==0.6.0
 anyio==4.2.0
 asttokens==2.4.1
 async-timeout==4.0.3
+asyncio==3.4.3
 attrs==23.2.0
 certifi==2023.11.17
 charset-normalizer==3.3.2
@@ -14,6 +15,7 @@ discord-typings==0.7.0
 discord-webhook==1.3.1
 discord.py==2.3.2
 distro==1.9.0
+dnspython==2.6.1
 emoji==2.9.0
 exceptiongroup==1.2.0
 executing==2.0.1
@@ -29,6 +31,7 @@ openai==1.10.0
 pydantic==2.5.3
 pydantic_core==2.14.6
 Pygments==2.17.2
+pymongo==4.6.2
 pyreadline3==3.4.1
 python-dotenv==1.0.0
 requests==2.31.0
@@ -39,4 +42,3 @@ tqdm==4.66.1
 typing_extensions==4.9.0
 urllib3==2.1.0
 yarl==1.9.4
-asyncio==3.4.3
