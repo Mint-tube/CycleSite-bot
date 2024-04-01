@@ -237,7 +237,7 @@ async def user_profile(intrct, member: discord.Member):
         xp_used += calc_lvl * config.xp_per_lvl
         calc_lvl += 1
 
-    scp_stats = await get_statistic(type = 'discord', id = member.id)
+    # scp_stats = await get_statistic(type = 'discord', id = member.id)
 
     embed = discord.Embed(title=f'Статистика пользователя {member.display_name} \n———————————————————————————', color=config.info)
     embed.set_author(name=intrct.user.display_name, icon_url=intrct.user.display_avatar)
