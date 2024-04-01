@@ -34,7 +34,7 @@ async def steam_sync(discord_id: int, steam: str):
     if steam_id == 0:
         syncroles.delete_one(filter={"DiscordId": discord_id})
         #Соединение разорвано -> No Content
-        return (204,)
+        return (204, None, steam_id)
 
     current_steam = syncroles.find_one({"_id": steam_id})
     current_discord = syncroles.find_one({"DiscordId": discord_id})
@@ -43,21 +43,21 @@ async def steam_sync(discord_id: int, steam: str):
     if not current_steam and not current_discord: 
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
         #Ни стим, ни дискорд ещё не привязаны -> Created
-        return (201,)
+        return (201, None, steam_id)
     elif not current_steam:
         syncroles.delete_one(filter={"DiscordId": discord_id})
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
         #Привязаный стим был изменён -> OK
-        return (200,)
+        return (200, None, steam_id)
     elif current_steam['DiscordId'] != discord_id:
         #Стим уже привязан к другому дискорду -> Conflict
-        return (409, current_steam['DiscordId'])
+        return (409, current_steam['DiscordId'],  steam_id)
     elif current_steam == current_discord:
         #Стим уже привязан к этому дискорд -> Not Modified
-        return (304,)
+        return (304, None,  steam_id)
     else:
         #Пиздец -> Internal Server Error
-        return (500,)
+        return (500, None, steam_id)
 
 async def steam_sync_forced(discord_id: int, steam_id: int):
     syncroles.delete_one(filter={"_id": steam_id})

@@ -614,23 +614,23 @@ async def steam_sync(intrct, steam: str):
         case 200:
             embed = discord.Embed(title="Привязанный Steam был изменён ✅", color=config.success)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
-            embed.add_field(name="Steam", value=steam_id, inline=True)
+            embed.add_field(name="Steam", value=response[2], inline=True)
         case 201:
             embed = discord.Embed(title="Steam привязан к Discord ✅", color=config.success)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
-            embed.add_field(name="Steam", value=steam_id, inline=True)
+            embed.add_field(name="Steam", value=response[2], inline=True)
         case 204:
-            embed = discord.Embed(title="Соединение разорвано ⚠", color=config.warning)
+            embed = discord.Embed(title="Соединение разорвано 🟡", color=config.warning)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value="Не привязан", inline=True)
         case 304:
             embed = discord.Embed(title="Steam уже привязан к этому Discord 🆗", color=config.info)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
-            embed.add_field(name="Steam", value=steam_id, inline=True)
+            embed.add_field(name="Steam", value=response[2], inline=True)
         case 409:
             embed = discord.Embed(title="Steam уже привязан к чужому Discord ❌", description=f"Вы можете обратиться к пользователю или администрации,\nесли это ваш аккаунт", color=config.danger)
             embed.add_field(name="Discord", value=f'<@{response[1]}>', inline=True)
-            embed.add_field(name="Steam", value=steam_id, inline=True)
+            embed.add_field(name="Steam", value=response[2], inline=True)
         case 500:
             embed = discord.Embed(title="⚠ Произошла ошибка", color=config.warning)
     await intrct.response.send_message(embed = embed)
