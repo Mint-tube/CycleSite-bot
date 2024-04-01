@@ -58,7 +58,8 @@ async def steam_sync(discord_id: int, steam: str):
 
 async def steam_sync_forced(discord_id: int, steam_id: int):
     syncroles.delete_one(filter={"_id": steam_id})
-    syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
+    if steam_id != 0:
+        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
     return None
 
 async def get_statistic(type: str, id: int):
