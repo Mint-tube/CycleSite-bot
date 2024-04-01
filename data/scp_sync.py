@@ -22,14 +22,11 @@ async def steam_sync(discord_id: int, steam: str):
     except ValueError:
         steam = steam[:-1] if steam[-1] == '/' else steam
         steam_usertag = steam.split('/')[-1]
-        debug(steam)
-        debug(steam_usertag)
         api_response = requests.get(f'http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={config.steam_api_key}&vanityurl={steam_usertag}')
         if api_response.status_code == 200:
-            steam_id = api_response.json()['response']['steamid']
-            debug(steam_id)
+            steam_id = int(api_response.json()['response']['steamid'])
         else:
-            return (api_response.status_code, api_response.json()['response']['message'])
+            error(api_response.status_code, api_response.json()['response']['message'])
 
     if steam_id == 0:
         syncroles.delete_one(filter={"DiscordId": discord_id})
