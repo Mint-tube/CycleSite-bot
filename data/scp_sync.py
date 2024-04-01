@@ -1,5 +1,7 @@
 from pymongo import MongoClient, timeout
 from data.logging import *
+import data.config as config
+import requests
 
 __all__ = ["steam_sync", "update_role", "get_statistic"]
 
@@ -14,7 +16,21 @@ statistic = players.statistic
 async def update_role(discord_id: int, discord_role_id: int):
     return
 
-async def steam_sync(discord_id: int, steam_id: int):
+async def steam_sync(discord_id: int, steam: str):
+    try:
+        steam_id = int(steam)
+    except ValueError:
+        steam = steam[:-1] if steam[-1] == '/' else steam
+        steam_usertag = steam.split('/')[-1]
+        debug(steam)
+        debug(steam_usertag)
+        api_response = requests.get(f'http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={config.steam_api_key}&vanityurl={steam_usertag}')
+        if api_response.status_code == 200:
+            steam_id = api_response.json()['response']['steamid']
+            debug(steam_id)
+        else:
+            return (api_response.status_code, api_response.json()['response']['message'])
+
     if steam_id == 0:
         syncroles.delete_one(filter={"DiscordId": discord_id})
         #Соединение разорвано -> No Content

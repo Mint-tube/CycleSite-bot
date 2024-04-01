@@ -3,6 +3,7 @@ token = 'MTE4ODAyNDA1Nzg3OTMzNDk3NA.GnOFjw.a56IrzEUjsRxOIRCVMndz2ntIZIfycmq4eD1q
 guild = 1122085072577757275 #Сервер на котором работает бот
 client_id = 1188024057879334974
 naga_api_key = 'ng-IqawEKgW5IEZABcbQTns4nYCbCsaB'
+steam_api_key = 'BDA0449D07083E4A8937DA79AFF87A08'
 
 #Ебучие роли
 bot_engineers = [949708119334854658, 1070664383581143141, 554281270260006914] #3RD и 2 акка Олежи

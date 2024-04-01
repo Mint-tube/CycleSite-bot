@@ -271,7 +271,7 @@ async def ticketing(intrct, type: str):
         case 'заявки':
             #пиздец олежа что ты сделал
             embed = discord.Embed(title="👥 Роли", description='''**Список ролей Discord сервера!** 
-            
+
                             **Администрация:** 
 
                             > <@&1122089304290762773> - роль владельца сервера 
@@ -606,9 +606,10 @@ async def change_xp(intrct, member: discord.Member, delta: int):
     embed = interaction_author(discord.Embed(description=f'Опыт {member.mention} был изменён на {str(delta)}', color=config.info), intrct)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name='steam', description='Синхронизация Steam с Discord (0 для десинхронизации)', guild=discord.Object(id=config.guild))
-async def steam_sync(intrct, steam_id: str):
-    response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam_id=int(steam_id))
+@tree.command(name='steam', description='Синхронизация Steam с Discord', guild=discord.Object(id=config.guild))
+@app_commands.describe(steam='Steam ID / ссылка на профиль / 0 для десинхронизации')
+async def steam_sync(intrct, steam: str):
+    response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam=steam)
     match response[0]:
         case 200:
             embed = discord.Embed(title="Привязанный Steam был изменён ✅", color=config.success)
