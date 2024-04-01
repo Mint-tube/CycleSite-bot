@@ -249,5 +249,5 @@ async def user_profile(intrct, member: discord.Member):
     embed.add_field(name='Пиццы:', value = f'{pizza} 🍕')
     embed.add_field(name='Время в войсе:', value = str(round(voice_time, 2)) + ' часов')
     embed.add_field(name='', value = '')
-    embed.add_field(name='————————————————————————————————————', value='')
+    # embed.add_field(name='—————————————————————————————————', value='')
     await intrct.response.send_message(embed=embed)
