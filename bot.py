@@ -648,6 +648,9 @@ async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
         embed.add_field(name="Steam", value=steam_id, inline=True)
     await intrct.response.send_message(embed = embed)
 
+@tree.command(name='stats', guild=discord.Object(id=config.guild))
+async def stats(intrct):
+    await intrct.response.send_message(embed = await scp_sync.get_stats(intrct.user.id))
 
 #События
 

@@ -3,7 +3,7 @@ from data.logging import *
 import data.config as config
 import requests
 
-__all__ = ["steam_sync", "update_role", "get_statistic"]
+__all__ = ["steam_sync", "update_role", "get_stats"]
 
 mongodb_client = MongoClient("mongodb://localhost:27017")
 players = mongodb_client.players
@@ -62,10 +62,8 @@ async def steam_sync_forced(discord_id: int, steam_id: int):
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
     return None
 
-async def get_statistic(type: str, id: int):
-    match type:
-        case "steam":
-            steam_id = id
-        case "discord":
-            steam_id = syncroles.find_one(filter={"DiscordId": id})["_id"]
-    return statistic.find_one(filter={"_id": steam_id})
+async def get_stats(discord_id: int):
+    steam_id = syncroles.find_one(filter={"DiscordId": id})["_id"]
+    stats = statistic.find_one(filter={"_id": steam_id})
+    main = main.find_one(filter={"_id": steam_id}) 
+    return stats, main

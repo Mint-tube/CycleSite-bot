@@ -3,7 +3,7 @@ from math import ceil
 
 import data.config as config
 from data.logging import *
-from data.scp_sync import get_statistic
+from data.scp_sync import get_stats
 
 #О нет, view(
 class leaderboard_view(discord.ui.View):
