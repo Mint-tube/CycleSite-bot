@@ -64,6 +64,7 @@ async def steam_sync_forced(discord_id: int, steam_id: int):
     return None
 
 async def get_stats(discord_id: int):
+    global main, syncroles, statistic
     steam_id = syncroles.find_one(filter={"DiscordId": discord_id})["_id"]
     stats = statistic.find_one(filter={"_id": steam_id})
     main = main.find_one(filter={"_id": steam_id}) 
