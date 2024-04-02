@@ -57,8 +57,8 @@ async def steam_sync(discord_id: int, steam: str):
         return (500, None, steam_id)
 
 async def steam_sync_forced(discord_id: int, steam_id: int):
-    syncroles.delete_one(filter={"_id": steam_id})
-    syncroles.delete_one(filter={"DiscordId": discord_id})
+    syncroles.delete(filter={"_id": steam_id})
+    syncroles.delete(filter={"DiscordId": discord_id})
     if steam_id != 0:
         syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
     return None
