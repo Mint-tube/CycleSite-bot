@@ -609,7 +609,7 @@ async def change_xp(intrct, member: discord.Member, delta: int):
 @tree.command(name='steam', description='Синхронизация Steam с Discord', guild=discord.Object(id=config.guild))
 @app_commands.describe(steam='Steam ID / ссылка на профиль / 0 для десинхронизации')
 async def steam_sync(intrct, steam: str):
-    response = await scp_sync.steam_sync(discord_id=intrct.user.id, steam=steam)
+    response = await scp_sync.steam_sync(discord_id=str(intrct.user.id), steam=steam)
     match response[0]:
         case 200:
             embed = discord.Embed(title="Привязанный Steam был изменён ✅", color=config.success)
@@ -624,7 +624,7 @@ async def steam_sync(intrct, steam: str):
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value="Не привязан", inline=True)
         case 304:
-            embed = discord.Embed(title="Steam уже привязан к этому Discord 🆗", color=config.info)
+            embed = discord.Embed(title="Steam уже привязан к этому Discord", color=config.info)
             embed.add_field(name="Discord", value=str(intrct.user.mention), inline=True)
             embed.add_field(name="Steam", value=response[2], inline=True)
         case 409:
@@ -637,7 +637,7 @@ async def steam_sync(intrct, steam: str):
 
 @tree.command(name='steam_forced', description='Насильно привязать Steam к аккаунту Discord', guild=discord.Object(id=config.guild))
 async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
-    await scp_sync.steam_sync_forced(discord_id=int(discord_id), steam_id=int(steam_id))
+    await scp_sync.steam_sync_forced(discord_id=discord_id, steam_id=steam_id)
     if steam_id == '0':
         embed = discord.Embed(title="Steam отвязан успешно 🌐", color=config.info)
         embed.add_field(name="Discord", value=f'<@{discord_id}>', inline=True)
@@ -648,9 +648,6 @@ async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
         embed.add_field(name="Steam", value=steam_id, inline=True)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name='stats', guild=discord.Object(id=config.guild))
-async def stats(intrct):
-    await intrct.response.send_message(embeds = await scp_sync.get_stats(intrct.user.id))
 
 #События
 

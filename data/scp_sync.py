@@ -16,25 +16,29 @@ statistic = players.statistic
 async def update_role(discord_id: int, discord_role_id: int):
     return
 
-async def steam_sync(discord_id: int, steam: str):
+async def steam_sync(discord_id: str, steam: str):
+    global syncroles
     try:
-        steam_id = int(steam)
+        steam_id = str(int(steam))
     except ValueError:
         steam = steam[:-1] if steam[-1] == '/' else steam
         steam_usertag = steam.split('/')[-1]
         api_response = requests.get(f'http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={config.steam_api_key}&vanityurl={steam_usertag}')
         if api_response.status_code == 200:
-            steam_id = int(api_response.json()['response']['steamid'])
+            steam_id = api_response.json()['response']['steamid']
         else:
             error(api_response.status_code, api_response.json()['response']['message'])
 
-    if steam_id == 0:
-        syncroles.delete_one(filter={"DiscordId": discord_id})
+    if steam_id == '0':
+        syncroles.delete_many(filter={"DiscordId": discord_id})
         #Соединение разорвано -> No Content
         return (204, None, steam_id)
 
     current_steam = syncroles.find_one({"_id": steam_id})
     current_discord = syncroles.find_one({"DiscordId": discord_id})
+
+    debug([doc for doc in syncroles.find(filter={'_id': steam_id})])
+    debug([doc for doc in syncroles.find(filter={'DiscordId': discord_id})])
 
     #Коды ответа соответсвуют HTTP
     if not current_steam and not current_discord: 
@@ -56,16 +60,17 @@ async def steam_sync(discord_id: int, steam: str):
         #Пиздец -> Internal Server Error
         return (500, None, steam_id)
 
-async def steam_sync_forced(discord_id: int, steam_id: int):
+async def steam_sync_forced(discord_id: str, steam_id: str):
+    global syncroles
     syncroles.delete_many(filter={"_id": steam_id})
     syncroles.delete_many(filter={"DiscordId": discord_id})
-    if steam_id != 0:
-        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False})
-    return None
+    
+    if int(steam_id) != 0:
+        syncroles.insert_one(document={"_id": steam_id, "DiscordId": discord_id, "RoleId": None, 'Exception': False}).inserted_id
 
-async def get_stats(discord_id: int):
+async def get_stats(discord_id: str):
     global main, syncroles, statistic
     steam_id = syncroles.find_one(filter={"DiscordId": discord_id})["_id"]
-    stats = statistic.find_one(filter={"_id": steam_id})
-    main = main.find_one(filter={"_id": steam_id}) 
-    return stats, main
+    stats = statistic.find_one({"_id": steam_id})
+    main = main.find_one({"_id": steam_id})
+    return (stats, main)
