@@ -197,7 +197,7 @@ async def on_ready():
     info(f'{Fore.CYAN}{client.user.name}{Style.RESET_ALL} подключён к серверу!')
 
 #Пинг бота по slash-комманде
-@tree.command(name="пинг", description="Пингани бота!", guild=discord.Object(id=config.guild))
+@tree.command(name="ping", description="Пингани бота!", guild=discord.Object(id=config.guild))
 async def on_ping(intrct):
     embed = discord.Embed(title="Понг!    ", description=f"{round(client.latency * 1000)}мс", color=config.info)
     await intrct.response.send_message(embed=embed)
@@ -414,7 +414,7 @@ async def drop(intrct, table: str):
     embed = discord.Embed(title="Ты точно хочешь сбросить таблицу?", description=f"Будет сброшена таблица {table} у {socket.gethostname()}", color=config.danger)
     await intrct.response.send_message(embed = embed, view = drop_confirm(table, intrct), ephemeral = True, delete_after = 15)
     
-@tree.command(name="варн", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
+@tree.command(name="warn", description="Выдача предупреждения", guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь', reason='причина')
 async def warn(intrct, user: discord.Member, reason: str):
     #Проверка на адекватность
