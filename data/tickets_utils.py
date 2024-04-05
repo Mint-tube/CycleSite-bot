@@ -158,28 +158,6 @@ class modal():
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
     class application():
-        
-        class player_role(ui.Modal, title='Заявка на партнёрку'):
-            age = ui.TextInput(label='Ссылка на ваш сервер:', style=discord.TextStyle.short)
-            exp = ui.TextInput(label='Ссылка на ваш сервер:', style=discord.TextStyle.short)
-            familiar = ui.TextInput(label='Откуда узнали о нашем сервере:', style=discord.TextStyle.short)
-            interview = ui.TextInput(label='Есть ли дополнительные просьбы:', style=discord.TextStyle.short)
-            async def on_submit(self, interaction: discord.Interaction):
-                thread = await interaction.channel.create_thread(name=f"заявка-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
-                ticket_id = int(thread.name.split("-")[-1])
-                open_embed = discord.Embed(title=f"Заявка номер {ticket_id} открыта!", color=config.info)
-                open_embed = interaction_author(open_embed, interaction)
-                ticket_type = discord.Embed(title='Заявка на партнёрку', color=config.info)
-                modal_params = discord.Embed(color=config.info)
-                modal_params.add_field(name=self.age.label, value='>>> ' + self.age.value, inline=False)
-                modal_params.add_field(name=self.exp.label, value='>>> ' + self.exp.value, inline=False)
-                modal_params.add_field(name=self.familiar.label, value='>>> ' + self.familiar.value, inline=False)
-                modal_params.add_field(name=self.interview.label, value='>>> ' + self.interview.value, inline=False)
-                await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
-                await thread.send(interaction.user.mention)
-                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
-                embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.info)
-                await interaction.response.send_message(embed=embed, ephemeral=True)
 
         class administrator_scp(ui.Modal, title='Заявка на администратора сервера SCP'):
             age = ui.TextInput(label='Ваш возраст:', style=discord.TextStyle.short)
@@ -268,6 +246,28 @@ class modal():
                 await thread.send(interaction.guild.get_role(config.secretary_role).mention)
                 embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.info)
                 await interaction.response.send_message(embed=embed, ephemeral=True)
+        
+        class partnership(ui.Modal, title='Заявка на становление партнёром:'):
+            name = ui.TextInput(label='Ваш сервер (ссылка):', style=discord.TextStyle.short)
+            point = ui.TextInput(label='Цель партнёрки:', style=discord.TextStyle.long)
+            source = ui.TextInput(label='Откуда узнали про наш проект:', style=discord.TextStyle.short)
+            extra = ui.TextInput(label='Есть ли дополнительные просьбы:', style=discord.TextStyle.long)
+            async def on_submit(self, interaction: discord.Interaction):
+                thread = await interaction.channel.create_thread(name=f"заявка-номер-{tickets_counter_add()}", auto_archive_duration=10080, invitable=False)
+                ticket_id = int(thread.name.split("-")[-1])
+                open_embed = discord.Embed(title=f"Заявка номер {ticket_id} открыта!", color=config.info)
+                open_embed = interaction_author(open_embed, interaction)
+                ticket_type = discord.Embed(title='Заявка на партёрку', color=config.info)
+                modal_params = discord.Embed(color=config.info)
+                modal_params.add_field(name=self.name.label, value='>>> ' + self.name.value, inline=False)
+                modal_params.add_field(name=self.point.label, value='>>> ' + self.point.value, inline=False)
+                modal_params.add_field(name=self.source.label, value='>>> ' + self.source.value, inline=False)
+                modal_params.add_field(name=self.extra.label, value='>>> ' + self.extra.value, inline=False)
+                await thread.send(embeds=[open_embed, ticket_type, modal_params], view = ticket_operator())
+                await thread.send(interaction.user.mention)
+                await thread.send(interaction.guild.get_role(config.secretary_role).mention)
+                embed = discord.Embed(title="Тикет открыт", description=f"В канале {thread.mention}", color=config.info)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class application_type_select(discord.ui.Select):
@@ -278,7 +278,7 @@ class application_type_select(discord.ui.Select):
             discord.SelectOption(label='Заявка на модератора Discord', emoji='👾'),
             discord.SelectOption(label='Заявка на тех. администратора', emoji='💻'),
             discord.SelectOption(label='Заявка на ивентолога', emoji='🎈'),
-            discord.SelectOption(label='Заявка на становление организацией', emoji='🎓')
+            discord.SelectOption(label='Заявка на становление партнёром', emoji='🎓')
         ]
 
         super().__init__(placeholder='На какую роль будете подавать?', min_values=1, max_values=1, options=options, custom_id='application_type')
@@ -295,8 +295,8 @@ class application_type_select(discord.ui.Select):
                 await interaction.response.send_modal(modal.application.administrator_tech())
             case 'Заявка на ивентолога':
                 await interaction.response.send_modal(modal.application.eventmaker())
-            case 'Заявка на становление организацией':
-                await interaction.response.send_modal(modal.application.organization())
+            case 'Заявка на становление партнёром':
+                await interaction.response.send_modal(modal.application.partnership())
 
 class report_type_select(discord.ui.Select):
     def __init__(self):
