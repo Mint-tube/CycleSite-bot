@@ -257,15 +257,15 @@ async def on_member_update(before, after):
 async def ticketing(intrct, type: str):
     match type.lower():
         case 'вопросы':
-            embed = discord.Embed(title="Задайте свой вопрос!", description="Здесь вы можете создать тикет с вашим вопросом, на который ответит администрация сервера!", color=config.info)
+            embed = discord.Embed(title="❓ Задайте свой вопрос!", description="Здесь вы можете создать тикет с вашим вопросом, на который ответит администрация сервера!", color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.question())
             client.add_view(ticket_launcher.question())
         case 'баги':
-            embed = discord.Embed(title="Пожаловаться на баг.", description="Здесь можно сообщить о баге.", color=config.danger)
+            embed = discord.Embed(title="🐛 Пожаловаться на баг.", description="Здесь можно сообщить о баге.", color=config.danger)
             await intrct.channel.send(embed=embed, view=ticket_launcher.bug())
             client.add_view(ticket_launcher.bug())
         case 'жалобы':
-            embed = discord.Embed(title="Подать жалобу/апелляцию.", description="Здесь можно написать жалобу на игрока/админа или написать апелляцию!", color=config.warning)
+            embed = discord.Embed(title="🔏 Подать жалобу или апелляцию.", description="Здесь можно написать жалобу на игрока или админа или написать апелляцию!", color=config.warning)
             await intrct.channel.send(embed=embed, view=ticket_launcher.report())
             client.add_view(ticket_launcher.report())
         case 'заявки':
