@@ -270,53 +270,53 @@ async def ticketing(intrct, type: str):
             client.add_view(ticket_launcher.report())
         case 'заявки':
             #пиздец олежа что ты сделал
-            embed = discord.Embed(title="👥 Роли", description='''**Список ролей Discord сервера!** 
-
-                            **Администрация:** 
-
-                            > <@&1122089304290762773> - роль владельца сервера 
-                            > <@&1134198325189562468> - роль большой шишки 
-                            > <@&1210729205340311622> - роль помощника Совета О5
-                            > <@&1134810427889549383> - роль технического администратора 
-                            > <@&1134177570770911373>, <@&1222560293889249330> - администраторы SCP:SL
-                            > <@&1177911300941164674>, <@&1222557997033848974> - модераторы Discord 
-                            > <@&1123307213000298627> - роль стажёра администрации 
-
-                            **Люди заслужившие особое внимание:** 
-
-                            > <@&1177515135280103504> - роль проводящего ивенты 
-                            > <@&1174776209477996574> - роль доверенного администрации 
-                            > <@&1122546899665293382> - роль начального игрока 
-                            > <@&1179756967397425273> - роль среднего игрока 
-                            > <@&1179757460492386355> - роль профессионального игрока 
-
-                            **Донатеры:** 
-
-                            > <@&1138445633519357954> - роль ультра щедрого человека 
-                            > <@&1138443741699522571> - роль очень щедрого человека 
-                            > <@&1138436827909455925> - роль щедрого человека 
-
-                            **Роли за уровень:** 
-
-                            > <@&1138456995498823781> - роль за 40 уровень Discord 
-                            > <@&1138456798005842041> - роль за 30 уровень Discord 
-                            > <@&1138456361202614302> - роль за 20 уровень discord 
-                            > <@&1138455999993360444> - роль за 15 уровень Discord 
-                            > <@&1138455214706393088> - роль за 10 уровень Discord 
-                            > <@&1138454303409963088> - роль за 3 уровень Discord 
-
-
-
-                            > **Есть роли, которые тут не написаны. Эти роли либо очень очевидные, по типу <@&1122932414923161660> или же объяснены в другом месте либо же секретные, о предназначении которых вам стоит догадаться самостоятельно!** 
-
-
-                            > **Так же вы можете выбрать ниже интересующую вас заявку.**''', color=config.info)
+            embed = discord.Embed(title="👥 Роли", description='**Список ролей Discord сервера!**\n'+
+                            '\n'+
+                            '**Администрация:** \n'+
+                            '\n'+
+                            '> <@&1122089304290762773> - роль владельца сервера \n'+
+                            '> <@&1134198325189562468> - роль большой шишки \n'+
+                            '> <@&1210729205340311622> - роль помощника Совета О5\n'+
+                            '> <@&1134810427889549383> - роль технического администратора \n'+
+                            '> <@&1134177570770911373>, <@&1222560293889249330> - администраторы SCP:SL \n'+
+                            '> <@&1177911300941164674>, <@&1222557997033848974> - модераторы Discord \n'+
+                            '> <@&1123307213000298627> - роль стажёра администрации \n'+
+                            '> <@&1177515135280103504> - роль проводящего ивенты \n'+
+                            '\n'+
+                            '**Люди заслужившие особое внимание:** \n'+
+                            '\n'+
+                            '> <@&1174776209477996574> - роль доверенного администрации \n'+
+                            '> <@&1122546899665293382> - роль начального игрока \n'+
+                            '> <@&1179756967397425273> - роль среднего игрока \n'+
+                            '> <@&1179757460492386355> - роль профессионального игрока \n'+
+                            '\n'+
+                            '**Донатеры:** \n'+
+                            '\n'+
+                            '> <@&1138445633519357954> - роль ультра щедрого человека \n'+
+                            '> <@&1138443741699522571> - роль очень щедрого человека \n'+
+                            '> <@&1138436827909455925> - роль щедрого человека \n'+
+                            '\n'+
+                            '**Роли за уровень:** \n'+
+                            '\n'+
+                            '> <@&1138456995498823781> - роль за 40 уровень Discord \n'+
+                            '> <@&1138456798005842041> - роль за 30 уровень Discord \n'+
+                            '> <@&1138456361202614302> - роль за 20 уровень Discord \n'+
+                            '> <@&1138455999993360444> - роль за 15 уровень Discord \n'+
+                            '> <@&1138455214706393088> - роль за 10 уровень Discord \n'+
+                            '> <@&1138454303409963088> - роль за 3 уровень Discord \n'+
+                            '\n'+
+                            '\n'+
+                            '\n'+
+                            '> **Есть роли, которые тут не написаны. Эти роли либо очень очевидные, по типу <@&1122932414923161660> или же объяснены в другом месте либо же секретные, о предназначении которых вам стоит догадаться самостоятельно!** \n'+
+                            '\n'+
+                            '\n'+
+                            '> **Так же вы можете выбрать ниже интересующую вас заявку.**\n', color=config.info)
             await intrct.channel.send(embed=embed, view=ticket_launcher.application())
             client.add_view(ticket_launcher.application())
     await intrct.response.defer()
     await intrct.delete_original_response()
 
-@tree.command(name='сказать', description='Эмбед от имени бота', guild=discord.Object(id=config.guild))
+@tree.command(name='say', description='Эмбед от имени бота', guild=discord.Object(id=config.guild))
 @app_commands.rename(title='заголовок', description='описание', color='цвет')
 @app_commands.describe(title='Заголовок', description='Описание', color='HEX цвет в формате 0x5c5eff')
 async def say(intrct, title: str = None, description: str = None, color: str = '0x5c5eff'):
@@ -405,7 +405,7 @@ async def rules(intrct):
     await intrct.channel.send(embeds = [embed, links])
     await intrct.delete_original_response()
     
-@tree.command(name='дроп', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
+@tree.command(name='drop', description='Сбросить таблицу', guild=discord.Object(id=config.guild))
 @app_commands.rename(table='таблица')
 async def drop(intrct, table: str):
     if intrct.user.id not in config.bot_engineers:
@@ -470,7 +470,7 @@ async def warn(intrct, user: discord.Member, reason: str):
     connection.commit()
     connection.close()
 
-@tree.command(name="список_варнов", description="Помощь", guild=discord.Object(id=config.guild))
+@tree.command(name="listwarns", description="Помощь", guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
 async def warns_list(intrct, user: discord.Member = None):
     if not user:
@@ -499,7 +499,7 @@ async def warns_list(intrct, user: discord.Member = None):
     connection.commit()
     connection.close()
 
-@tree.command(name='снять_варн', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
+@tree.command(name='remwarn', description='Досрочно снять варн', guild=discord.Object(id=config.guild))
 @app_commands.rename(warn_id='id')
 async def warn_del(intrct, warn_id: int):
     connection = sqlite3.connect('data/databases/warns.db')
@@ -512,7 +512,7 @@ async def warn_del(intrct, warn_id: int):
     interaction_author(embed, intrct)
     await intrct.response.send_message(embed=embed)
     
-@tree.command(name='аватар', description='Аватар пользователя', guild=discord.Object(id=config.guild))
+@tree.command(name='avatar', description='Аватар пользователя', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
 async def avatar(intrct, user: discord.Member = None):
     if user:
@@ -524,7 +524,7 @@ async def avatar(intrct, user: discord.Member = None):
         embed.set_image(url=intrct.user.display_avatar.url)
         await intrct.response.send_message(embed=embed)
 
-@tree.command(name='сменить_ии', description='Сменить модель ИИ', guild=discord.Object(id=config.guild))
+@tree.command(name='changeai', description='Сменить модель ИИ', guild=discord.Object(id=config.guild))
 @app_commands.rename(model='модель')
 async def change_gpt_model(intrct, model: str):
     if model in fetch_models():
@@ -536,7 +536,7 @@ async def change_gpt_model(intrct, model: str):
         embed = discord.Embed(title='Список доступных моделей:', description='\n'.join(fetch_models()), color=config.info)
         await intrct.response.send_message(embed=embed, ephemeral=True)
 
-@tree.command(name='бан', description='Унижение человека', guild=discord.Object(id=config.guild))
+@tree.command(name='ban', description='Унижение человека', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
 async def ban(intrct, user: discord.User):
     if guild.get_member(user.id):
@@ -558,7 +558,7 @@ async def ban(intrct, user: discord.User):
     embed = discord.Embed(description=f'**📕 {user.mention} забанен XD**', color=config.danger)
     await intrct.guild.get_channel(config.logs_channels.main).send(embed = embed)
 
-@tree.command(name='пардон', description='Унижение человека, но обратно', guild=discord.Object(id=config.guild))
+@tree.command(name='pardon', description='Унижение человека, но обратно', guild=discord.Object(id=config.guild))
 @app_commands.rename(user='пользователь')
 async def pardon(intrct, user: discord.Member):
     connection = sqlite3.connect('data/databases/warns.db')
@@ -579,12 +579,12 @@ async def pardon(intrct, user: discord.Member):
     connection.commit()
     connection.close()
 
-@tree.command(name='профиль', description='Профиль', guild=discord.Object(id=config.guild))
+@tree.command(name='profile', description='Профиль', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь')
 async def user_profile(intrct, member: discord.Member = None):
     await levelling.user_profile(intrct, member = member if not member == None else intrct.user)
 
-@tree.command(name='лидерборд', description='Топ по активности', guild=discord.Object(id=config.guild))
+@tree.command(name='leaderboard', description='Топ по активности', guild=discord.Object(id=config.guild))
 @app_commands.rename(lb_type='сортировать_по')
 @app_commands.choices(lb_type=[
         app_commands.Choice(name="✨ Опыту дискорда", value="xp"),
@@ -595,7 +595,7 @@ async def user_profile(intrct, member: discord.Member = None):
 async def leaderboard(intrct, lb_type: app_commands.Choice[str]):
     await levelling.leaderboard(intrct, lb_type = lb_type)
 
-@tree.command(name='опыт', description='Снять/начислить опыт', guild=discord.Object(id=config.guild))
+@tree.command(name='exp', description='Снять/начислить опыт', guild=discord.Object(id=config.guild))
 @app_commands.rename(member='пользователь', delta='дельта')
 async def change_xp(intrct, member: discord.Member, delta: int):
     new_lvl = await levelling.add_xp(member = member, delta = delta)
@@ -637,7 +637,7 @@ async def steam_sync(intrct, steam: str):
             embed = discord.Embed(title="⚠ Произошла ошибка", color=config.warning)
     await intrct.response.send_message(embed = embed)
 
-@tree.command(name='steam_forced', description='Насильно привязать Steam к аккаунту Discord', guild=discord.Object(id=config.guild))
+@tree.command(name='steamforced', description='Насильно привязать Steam к аккаунту Discord', guild=discord.Object(id=config.guild))
 async def steam_sync_forced(intrct, discord_id: str, steam_id: str):
     await scp_sync.steam_sync_forced(discord_id=discord_id, steam_id=steam_id)
     if steam_id == '0':
