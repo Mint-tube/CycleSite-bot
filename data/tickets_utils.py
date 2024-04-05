@@ -273,7 +273,6 @@ class modal():
 class application_type_select(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label='Заявка на роль постоянного игрока (Канцелярия)', emoji='📋'),
             discord.SelectOption(label='Заявка на администратора сервера SCP:SL', emoji='👮🏻‍♂️'),
             discord.SelectOption(label='Заявка на модератора Discord', emoji='👾'),
             discord.SelectOption(label='Заявка на тех. администратора', emoji='💻'),
